@@ -93,6 +93,15 @@ line")
     map)
   "Keymap for `ztree-mode'.")
 
+(defface ztreep-header-face
+  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
+   (((background dark)) (:height 1.2 :foreground "lightblue" :weight bold))
+    (t :height 1.2 :foreground "darkblue" :weight bold))
+  "*Face used for the header in Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-header-face 'ztreep-header-face)
+
+
 (defface ztreep-dir-face
     '((((background dark)) (:foreground "#ffffff"))
       (((type nil))        (:inherit 'font-lock-function-name-face))
@@ -344,10 +353,12 @@ apparently shall not be visible"
     line))
 
 (defun ztree-insert-buffer-header ()
-  (insert "Directory tree")
-  (newline)
-  (insert "==============")
-  (newline)
+  (let ((start (point)))
+    (insert "Directory tree")
+    (newline)
+    (insert "==============")
+    (set-text-properties start (point) '(face ztreep-header-face))
+    (newline))
   (setq ztree-start-line (line-number-at-pos (point))))
 
 
