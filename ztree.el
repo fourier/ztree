@@ -104,10 +104,11 @@
 
 (defun ztree-find (where which)
   "find element of the list `where` matching predicate `which`"
-  (if where
-      (if (funcall which (car where))
-          (car where)
-        (ztree-find (cdr where) which))))
+  (catch 'found
+    (dolist (elt where)
+      (when (funcall which elt)
+        (throw 'found elt)))
+    nil))
 
 (defun ztree-filter (condp lst)
   "Filter out elements of the list `lst` not satisfying predicate `condp`.
