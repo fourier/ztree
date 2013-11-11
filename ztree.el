@@ -43,18 +43,30 @@
   (setq-local font-lock-defaults
               '(ztree-font-lock-keywords)))
 
+(defun ztree-find (where which)
+  "find element of the list `where` matching predicate `which`"
+  (if where
+      (if (funcall which (car where))
+          (car where)
+        (ztree-find (cdr where) which))))
+
+(defun ztree-filter (condp lst)
+  "Filter out elements of the list `lst` not satisfying predicate `condp`.
+Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
+  (delq nil
+        (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
 (defun ztree-find-file-in-line (line)
   "Search through the array of filename-line pairs and return the
 filename for the line specified"
-  (let ((found (find line ztree-files-info
-                     :test #'(lambda (l entry) (eq l (cdr entry))))))
+  (let ((found (ztree-find ztree-files-info
+                           #'(lambda (entry) (eq line (cdr entry))))))
     (when found
       (car found))))
 
 (defun ztree-is-expanded-dir (dir)
   "Find if the directory is in the list of expanded directories"
-  (find dir ztree-expanded-dir-list :test 'string-equal))
+  (ztree-find ztree-expanded-dir-list #'(lambda (x) (string-equal x dir))))
 
 (defun scroll-to-line (line)
   "Recommended way to set the cursor to specified line"
@@ -79,7 +91,7 @@ filename for the line specified"
 (defun ztree-toggle-dir-state (dir)
   "Toggle expanded/collapsed state for directories"
   (if (ztree-is-expanded-dir dir)
-      (setq ztree-expanded-dir-list (remove-if #'(lambda (x) (string-equal dir x))
+      (setq ztree-expanded-dir-list (ztree-filter #'(lambda (x) (not (string-equal dir x)))
                                                   ztree-expanded-dir-list))
     (push dir ztree-expanded-dir-list)))
 
@@ -96,13 +108,13 @@ filename for the line specified"
   "Returns pair of 2 elements: list of subdirectories and
 list of files"
   (let ((files (directory-files path 'full)))
-    (cons (remove-if-not #'(lambda (f) (file-directory-p f)) files)
-          (remove-if #'(lambda (f) (file-directory-p f)) files))))
+    (cons (ztree-filter #'(lambda (f) (file-directory-p f)) files)
+          (ztree-filter #'(lambda (f) (not (file-directory-p f))) files))))
 
 (defun ztree-file-is-in-filter-list (file)
   "Determine if the file is in filter list (and therefore
 apparently shall not be visible"
-  (find file ztree-filter-list :test #'(lambda (f rx) (string-match rx f))))
+  (ztree-find ztree-filter-list #'(lambda (rx) (string-match rx file))))
 
 (defun ztree-draw-char (c x y)
   "Draw char c at the position (1-based) (x y)"
