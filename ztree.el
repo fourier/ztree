@@ -37,9 +37,8 @@
 ;;; Issues:
 ;;
 ;;; TODO:
-;; 1) bind Backspace to close current directory
-;; 2) Add some file-handling and marking abilities
-;; 3) More syntax highlighting
+;; 1) Add some file-handling and marking abilities
+;; 2) More syntax highlighting
 ;;
 ;;
 ;;; Change Log:
@@ -68,6 +67,16 @@
   "List of regexp for file/directory names to filter out")
 (make-variable-buffer-local 'ztree-filter-list)
 
+(defvar ztree-start-line nil
+  "Index of the start line - the root")
+(make-variable-buffer-local 'ztree-start-line)
+
+(defvar ztree-parent-lines-array nil
+  "Array of parent lines, there the ith value of the array
+is the parent line for line i. If ith value is i - it is the root
+line")
+(make-variable-buffer-local 'ztree-parent-lines-array)
+  
 ;;
 ;; Major mode definitions
 ;;
@@ -78,6 +87,9 @@
     (define-key map (kbd "SPC") 'ztree-perform-action)
     (define-key map [double-mouse-1] 'ztree-perform-action)
     (define-key map (kbd "g") 'ztree-refresh-buffer)
+    (if window-system
+        (define-key map (kbd "<backspace>") 'ztree-move-up-directory)
+      (define-key map "\177" 'ztree-move-up-directory))
     map)
   "Keymap for `ztree-mode'.")
 
@@ -128,6 +140,13 @@ filename for the line specified"
   "Find if the directory is in the list of expanded directories"
   (ztree-find ztree-expanded-dir-list #'(lambda (x) (string-equal x dir))))
 
+
+(defun ztree-set-parent-for-line (line parent)
+  (aset ztree-parent-lines-array (- line ztree-start-line) parent))
+
+(defun ztree-get-parent-for-line (line)
+  (aref ztree-parent-lines-array (- line ztree-start-line)))
+
 (defun scroll-to-line (line)
   "Recommended way to set the cursor to specified line"
   (goto-char (point-min))
@@ -154,6 +173,18 @@ filename for the line specified"
       (setq ztree-expanded-dir-list (ztree-filter #'(lambda (x) (not (string-equal dir x)))
                                                   ztree-expanded-dir-list))
     (push dir ztree-expanded-dir-list)))
+
+
+(defun ztree-move-up-directory ()
+  "Action on Backspace key: to jump to the line of a parent directory"
+  (interactive)
+  (when ztree-parent-lines-array
+    (let* ((line (line-number-at-pos (point)))
+           (parent (ztree-get-parent-for-line line)))
+      (scroll-to-line parent))))
+      
+      
+  
 
 (defun file-basename (file)
   "Base file/directory name. Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
@@ -225,11 +256,26 @@ apparently shall not be visible"
             (ztree-draw-horizontal-line (+ 3 (* offset 4))
                                            (+ 7 (* offset 4))
                                            child)))))))
+
+(defun ztree-fill-parent-array (tree)
+  ;; set the root line
+  (let ((root (car tree))
+        (children (cdr tree)))
+    (dolist (child children)
+      (if (atom child)
+          (ztree-set-parent-for-line child root)
+        (progn 
+          (ztree-set-parent-for-line (car child) root)
+          (ztree-fill-parent-array child))))))
   
-                                            
+
 (defun ztree-insert-directory-contents (path)
   ;; insert path contents with initial offset 0
-  (let ((tree (ztree-insert-directory-contents-1 path 0)))
+  (let ((tree (ztree-insert-directory-contents-1 path 0))
+        (num-of-items (- (line-number-at-pos (point)) ztree-start-line)))
+    (setq ztree-parent-lines-array (make-vector num-of-items 0))
+    (ztree-set-parent-for-line ztree-start-line ztree-start-line)
+    (ztree-fill-parent-array tree)
     (ztree-draw-tree tree 0)))
 
   
@@ -247,8 +293,7 @@ apparently shall not be visible"
             (when (not (or (string-equal short-dir-name ".")
                            (string-equal short-dir-name "..")
                            (ztree-file-is-in-filter-list short-dir-name)))
-              (push (ztree-insert-directory-contents-1 dir (1+ offset))
-                    children))))
+              (push (ztree-insert-directory-contents-1 dir (1+ offset)) children))))
         (dolist (file files)
           (let ((short-file-name (file-basename file)))
             (when (not (ztree-file-is-in-filter-list short-file-name))
@@ -284,7 +329,8 @@ apparently shall not be visible"
   (insert "Directory tree")
   (newline)
   (insert "==============")
-  (newline))
+  (newline)
+  (setq ztree-start-line (line-number-at-pos (point))))
 
 
 (defun ztree-refresh-buffer (&optional line)
@@ -296,7 +342,7 @@ apparently shall not be visible"
     (erase-buffer)
     (ztree-insert-buffer-header)
     (ztree-insert-directory-contents ztree-start-dir)
-    (scroll-to-line (if line line 3))
+    (scroll-to-line (if line line ztree-start-line))
     (toggle-read-only)))
 
 

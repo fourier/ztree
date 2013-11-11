@@ -19,4 +19,4 @@ Call the `ztree` interactive function:
 M-x ztree
 ```
 
-Open/close directories with double-click, `RET` or `Space` keys.
+Open/close directories with double-click, `RET` or `Space` keys. To jump to the parent directory, hit `Backspace` key.
