@@ -1,7 +1,7 @@
 ztree
 =====
 
-Simple text-mode directory tree for Emacs.
+Simple text-mode directory tree for Emacs. See screenshots below for GUI and the terminal versions of the zterm.
 
 ![ztree emacsapp](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_app.png "Emacs App with Ztree")
 
@@ -19,4 +19,4 @@ Call the `ztree` interactive function:
 M-x ztree
 ```
 
-Open/close directories with double-click, `RET` or `Space` keys. To jump to the parent directory, hit `Backspace` key.
+Open/close directories with double-click, `RET` or `Space` keys. To jump to the parent directory, hit the `Backspace` key.
