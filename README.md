@@ -1,4 +1,4 @@
 ztree
 =====
 
-Simple directory tree mode for Emacs
+Simple text-mode directory tree for Emacs.

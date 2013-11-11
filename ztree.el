@@ -1,5 +1,53 @@
-;;; -*- lexical-binding: nil -*-
-;; Directory tree
+;;; ztree.el --- Text mode directory tree
+
+;; Copyright (C) 2013 Alexey Veretennikov
+;;
+;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
+;; Created: 2013-11-1l
+;; Version: 1.0.0
+;; Keywords: files
+;; URL: https://github.com/fourier/ztree
+;; Compatibility: GNU Emacs GNU Emacs 24.x
+;;
+;; This file is NOT part of GNU Emacs.
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 2
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;;; Commentary:
+;;
+;; Add the following to your .emacs file:
+;; 
+;; (require 'ztree)
+;;
+;; Call the ztree interactive function:
+;; M-x ztree
+;; Open/close directories with double-click, Enter or Space keys
+;;
+;;; Issues:
+;;
+;;; TODO:
+;; 1) bind Backspace to close current directory
+;; 2) Add some file-handling and marking abilities
+;; 3) More syntax highlighting
+;;
+;;
+;;; Change Log:
+;; 
+;; 2013-11-10 (1.0.0)
+;;    Initial Release.
+;;
+;;; Code:
 
 (defconst ztree-hidden-files-regexp "^\\."
   "Hidden files regexp")
@@ -33,15 +81,26 @@
     map)
   "Keymap for `ztree-mode'.")
 
-(defvar ztree-font-lock-keywords
-  '(("[+] .*" (1 diredp-dir-heading)))
-  "Directory highlighting specification for `ztree-mode'.")
+(defface ztreep-dir-face
+    '((((background dark)) (:foreground "#ffffff"))
+      (((type nil))        (:inherit 'font-lock-function-name-face))
+      (t                   (:foreground "Blue")))
+  "*Face used for directories if Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-dir-face 'ztreep-dir-face)
+
+(defface ztreep-file-face
+    '((((background dark)) (:foreground "cyan1"))
+      (((type nil))        (:inherit 'font-lock-variable-name-face))
+      (t                   (:foreground "darkblue")))
+  "*Face used for directories if Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-file-face 'ztreep-file-face)
+
 
 ;;;###autoload
 (define-derived-mode ztree-mode special-mode "Ztree"
-  "A major mode for Diff Tree."
-  (setq-local font-lock-defaults
-              '(ztree-font-lock-keywords)))
+  "A major mode for displaying the directory tree in text mode.")
 
 (defun ztree-find (where which)
   "find element of the list `where` matching predicate `which`"
@@ -207,10 +266,15 @@ apparently shall not be visible"
         (insert " ")
         (insert-char ?\s 3)))           ; insert 3 spaces
     (if is-dir
-        (progn
-          (funcall dir-sign expanded)
-          (insert " " short-name))
-      (insert "    " short-name))
+        (progn                          
+          (funcall dir-sign expanded)   ; for directory insert "[+/-]"
+          (insert " ")
+          (put-text-property 0 (length short-name) 'face 'ztreep-dir-face short-name)
+          (insert short-name))
+      (progn
+        (insert "    ")
+        (put-text-property 0 (length short-name) 'face 'ztreep-file-face short-name)
+        (insert short-name)))
     (push (cons path (line-number-at-pos)) ztree-files-info)
     (newline)
     line))
@@ -236,6 +300,7 @@ apparently shall not be visible"
 
 
 (defun ztree (path)
+  "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DDirectory: ")
   (when (and (file-exists-p path) (file-directory-p path))
     (let ((buf (get-buffer-create (concat "*Directory " path " tree*"))))
