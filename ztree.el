@@ -38,7 +38,7 @@
 ;;
 ;;; TODO:
 ;; 1) Add some file-handling and marking abilities
-;; 2) More syntax highlighting
+;; 2) Extract tree code as as separate package
 ;;
 ;;
 ;;; Change Log:
@@ -97,7 +97,7 @@ line")
     '((((background dark)) (:foreground "#ffffff"))
       (((type nil))        (:inherit 'font-lock-function-name-face))
       (t                   (:foreground "Blue")))
-  "*Face used for directories if Ztree buffer."
+  "*Face used for directories in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-dir-face 'ztreep-dir-face)
 
@@ -105,9 +105,23 @@ line")
     '((((background dark)) (:foreground "cyan1"))
       (((type nil))        (:inherit 'font-lock-variable-name-face))
       (t                   (:foreground "darkblue")))
-  "*Face used for directories if Ztree buffer."
+  "*Face used for files in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-file-face 'ztreep-file-face)
+
+(defface ztreep-arrow-face
+    '((((background dark)) (:foreground "#7f7f7f"))
+      (t                   (:inherit 'font-lock-comment-face)))
+  "*Face used for arrows in Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-arrow-face 'ztreep-arrow-face)
+
+(defface ztreep-dirsign-face
+    '((((background dark)) (:foreground "#7f7fff"))
+      (t                   (:inherit 'font-lock-comment-face)))
+  "*Face used for directory sign [+] in Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-dirsign-face 'ztreep-dirsign-face)
 
 
 ;;;###autoload
@@ -214,7 +228,8 @@ apparently shall not be visible"
     (beginning-of-line)
     (goto-char (+ x (-(point) 1)))
     (delete-char 1)
-    (insert-char c 1)))
+    (insert-char c 1)
+    (set-text-properties (1- (point)) (point) '(face ztreep-arrow-face))))
 
 (defun ztree-draw-vertical-line (y1 y2 x)
   (if (> y1 y2)
@@ -304,7 +319,10 @@ apparently shall not be visible"
 (defun ztree-insert-entry (path offset expanded)
   (let ((short-name (printable-string (file-basename path)))
         (dir-sign #'(lambda (exp)
-                      (insert "[" (if exp "-" "+") "]")))
+                      (insert "[" (if exp "-" "+") "]")
+                      (set-text-properties (- (point) 3)
+                                           (point)
+                                           '(face ztreep-dirsign-face))))
         (is-dir (file-directory-p path))
         (line (line-number-at-pos)))
     (when (> offset 0)
