@@ -48,8 +48,17 @@
 ;;
 ;;; Code:
 
+;;
+;; Constants
+;;
+
 (defconst ztree-hidden-files-regexp "^\\."
-  "Hidden files regexp")
+  "Hidden files regexp. By default all filest starting with dot '.',
+including . and ..")
+
+;;
+;; Globals
+;;
 
 (defvar ztree-expanded-dir-list nil
   "A list of Expanded directory entries.")
@@ -76,7 +85,13 @@
 is the parent line for line i. If ith value is i - it is the root
 line")
 (make-variable-buffer-local 'ztree-parent-lines-array)
-  
+
+(defvar ztree-count-subsequent-bs nil
+  "Counter for the subsequest BS keys (to identify double BS). Used
+in order to not to use cl package and lexical-let")
+(make-variable-buffer-local 'ztree-count-subsequent-bs)
+
+
 ;;
 ;; Major mode definitions
 ;;
@@ -199,12 +214,22 @@ filename for the line specified"
 
 
 (defun ztree-move-up-directory ()
-  "Action on Backspace key: to jump to the line of a parent directory"
+  "Action on Backspace key: to jump to the line of a parent directory or
+if previous key was Backspace - close the directory"
   (interactive)
   (when ztree-parent-lines-array
     (let* ((line (line-number-at-pos (point)))
            (parent (ztree-get-parent-for-line line)))
-      (scroll-to-line parent))))
+
+  (if (and (equal last-command 'ztree-move-up-directory)
+           (not ztree-count-subsequent-bs))
+      (progn 
+        (ztree-toggle-dir-state
+         (ztree-find-file-in-line line))
+        (setq ztree-count-subsequent-bs t)
+        (ztree-refresh-buffer line))
+    (progn (setq ztree-count-subsequent-bs nil)
+           (scroll-to-line parent))))))
       
       
   
@@ -314,9 +339,7 @@ apparently shall not be visible"
              (files (cdr contents)))
         (dolist (dir dirs)
           (let ((short-dir-name (file-basename dir)))
-            (when (not (or (string-equal short-dir-name ".")
-                           (string-equal short-dir-name "..")
-                           (ztree-file-is-in-filter-list short-dir-name)))
+            (unless (ztree-file-is-in-filter-list short-dir-name)
               (push (ztree-insert-directory-contents-1 dir (1+ offset)) children))))
         (dolist (file files)
           (let ((short-file-name (file-basename file)))
