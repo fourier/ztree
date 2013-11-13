@@ -92,6 +92,29 @@ line")
 in order to not to use cl package and lexical-let")
 (make-variable-buffer-local 'ztree-count-subsequent-bs)
 
+(defun ztree-tree-header-fun nil
+  "Function inserting the header into the tree buffer.
+MUST inster newline at the end!")
+(make-variable-buffer-local 'ztree-tree-header-fun)
+
+(defvar ztree-node-short-name-fun nil
+  "Function which creates a pretty-printable short string from
+the node")
+(make-variable-buffer-local 'ztree-node-short-name-fun)
+
+(defun ztree-node-is-expandable-fun nil
+  "Function which determines if the node is expandable,
+for example if the node is a directory")
+(make-variable-buffer-local 'ztree-node-is-expandable-fun)
+
+(defun ztree-node-equal-fun nil
+  "Function which determines if the 2 nodes are equal")
+(make-variable-buffer-local 'ztree-node-equal-fun)
+
+(defun ztree-node-contents-fun nil
+  "Function returning list of node contents")
+(make-variable-buffer-local 'ztree-node-contents-fun)
+
 
 ;;
 ;; Major mode definitions
@@ -177,7 +200,7 @@ node name for the line specified"
 
 (defun ztree-is-expanded-node (node)
   "Find if the node is in the list of expanded nodes"
-  (ztree-find ztree-expanded-nodes-list #'(lambda (x) (string-equal x node))))
+  (ztree-find ztree-expanded-nodes-list #'(lambda (x) (funcall ztree-node-equal-fun x node))))
 
 
 (defun ztree-set-parent-for-line (line parent)
@@ -198,11 +221,11 @@ node name for the line specified"
   "Toggle expand/collapsed state for nodes"
   (interactive)
   (let* ((line (line-number-at-pos))
-         (file (ztree-find-node-in-line line)))
-    (when file
-      (if (file-directory-p file)  ; only for directories
-          (ztree-toggle-expand-state file)
-        nil)                            ; do nothiang for files for now
+         (node (ztree-find-node-in-line line)))
+    (when node
+      (if (funcall ztree-node-is-expandable-fun node)  ; only for expandable nodes
+          (ztree-toggle-expand-state node)
+        nil)                            ; do nothing leafs files for now
       (let ((current-pos (window-start))) ; save the current window start position
         (ztree-refresh-buffer line)    ; refresh buffer and scroll back to the saved line
         (set-window-start (selected-window) current-pos))))) ; restore window start position
@@ -211,8 +234,8 @@ node name for the line specified"
 (defun ztree-toggle-expand-state (node)
   "Toggle expanded/collapsed state for nodes"
   (if (ztree-is-expanded-node node)
-      (setq ztree-expanded-nodes-list (ztree-filter #'(lambda (x) (not (string-equal node x)))
-                                                  ztree-expanded-nodes-list))
+      (setq ztree-expanded-nodes-list (ztree-filter #'(lambda (x) (not (funcall ztree-node-equal-fun node x)))
+                                                    ztree-expanded-nodes-list))
     (push node ztree-expanded-nodes-list)))
 
 
@@ -235,21 +258,12 @@ if previous key was Backspace - close the node"
                  (scroll-to-line parent)))))))
 
 
-(defun file-basename (file)
-  "Base file/directory name. Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (file-name-nondirectory (directory-file-name file)))
-
-(defun printable-string (string)
-  "Strip newline character from file names, like 'Icon\n'"
-  (replace-regexp-in-string "\n" "" string))  
-
-
-(defun ztree-get-directory-contens (path)
-  "Returns pair of 2 elements: list of subdirectories and
-list of files"
-  (let ((files (directory-files path 'full)))
-    (cons (ztree-filter #'(lambda (f) (file-directory-p f)) files)
-          (ztree-filter #'(lambda (f) (not (file-directory-p f))) files))))
+(defun ztree-get-splitted-node-contens (path)
+  "Returns pair of 2 elements: list of expandable nodes and
+list of leafs"
+  (let ((nodes (funcall ztree-node-contents-fun path)))
+    (cons (ztree-filter #'(lambda (f) (funcall ztree-node-is-expandable-fun f)) nodes)
+          (ztree-filter #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f))) nodes))))
 
 (defun ztree-node-is-in-filter-list (node)
   "Determine if the node is in filter list (and therefore
@@ -330,41 +344,41 @@ apparently shall not be visible"
 
 
 
-(defun ztree-insert-node-contents-1 (path offset)
-  (let* ((expanded (ztree-is-expanded-node path))
-         (root-line (ztree-insert-entry path offset expanded))
+(defun ztree-insert-node-contents-1 (node offset)
+  (let* ((expanded (ztree-is-expanded-node node))
+         (root-line (ztree-insert-entry node offset expanded))
          (children nil))
     (when expanded 
-      (let* ((contents (ztree-get-directory-contens path))
+      (let* ((contents (ztree-get-splitted-node-contens node))
              (nodes (car contents))
              (leafs (cdr contents)))
         (dolist (node nodes)
-          (let ((short-dir-name (file-basename node)))
-            (unless (ztree-node-is-in-filter-list short-dir-name)
+          (let ((short-node-name (funcall ztree-node-short-name-fun node)))
+            (unless (ztree-node-is-in-filter-list short-node-name)
               (push (ztree-insert-node-contents-1 node (1+ offset)) children))))
         (dolist (leaf leafs)
-          (let ((short-file-name (file-basename leaf)))
-            (when (not (ztree-node-is-in-filter-list short-file-name))
+          (let ((short-leaf-name (funcall ztree-node-short-name-fun leaf)))
+            (when (not (ztree-node-is-in-filter-list short-leaf-name))
               (push (ztree-insert-entry leaf (1+ offset) nil)
                     children))))))
     (cons root-line children)))
 
-(defun ztree-insert-entry (path offset expanded)
-  (let ((short-name (printable-string (file-basename path)))
-        (dir-sign #'(lambda (exp)
-                      (insert "[" (if exp "-" "+") "]")
-                      (set-text-properties (- (point) 3)
-                                           (point)
-                                           '(face ztreep-expand-sign-face))))
-        (is-dir (file-directory-p path))
+(defun ztree-insert-entry (node offset expanded)
+  (let ((short-name (funcall ztree-node-short-name-fun node))
+        (node-sign #'(lambda (exp)
+                       (insert "[" (if exp "-" "+") "]")
+                       (set-text-properties (- (point) 3)
+                                            (point)
+                                            '(face ztreep-expand-sign-face))))
+        (is-expandable (funcall ztree-node-is-expandable-fun node))
         (line (line-number-at-pos)))
     (when (> offset 0)
       (dotimes (i offset)
         (insert " ")
         (insert-char ?\s 3)))           ; insert 3 spaces
-    (if is-dir
+    (if is-expandable
         (progn                          
-          (funcall dir-sign expanded)   ; for directory insert "[+/-]"
+          (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
           (insert " ")
           (put-text-property 0 (length short-name) 'face 'ztreep-node-face short-name)
           (insert short-name))
@@ -372,18 +386,9 @@ apparently shall not be visible"
         (insert "    ")
         (put-text-property 0 (length short-name) 'face 'ztreep-leaf-face short-name)
         (insert short-name)))
-    (push (cons path (line-number-at-pos)) ztree-node-to-line-list)
+    (push (cons node (line-number-at-pos)) ztree-node-to-line-list)
     (newline)
     line))
-
-(defun ztree-insert-buffer-header ()
-  (let ((start (point)))
-    (insert "Directory tree")
-    (newline)
-    (insert "==============")
-    (set-text-properties start (point) '(face ztreep-header-face))
-    (newline))
-  (setq ztree-start-line (line-number-at-pos (point))))
 
 
 (defun ztree-refresh-buffer (&optional line)
@@ -393,10 +398,33 @@ apparently shall not be visible"
     (setq ztree-node-to-line-list nil)
     (toggle-read-only)
     (erase-buffer)
-    (ztree-insert-buffer-header)
+  (let ((start (point)))
+    (funcall ztree-tree-header-fun)
+    (set-text-properties start (point) '(face ztreep-header-face)))
+    (setq ztree-start-line (line-number-at-pos (point)))
     (ztree-insert-node-contents ztree-start-node)
     (scroll-to-line (if line line ztree-start-line))
     (toggle-read-only)))
+
+
+;;
+;; File bindings to the tree control
+;;
+
+(defun ztree-insert-buffer-header ()
+  (insert "Directory tree")
+  (newline)
+  (insert "==============")
+  (newline))
+
+(defun printable-string (string)
+  "Strip newline character from file names, like 'Icon\n'"
+  (replace-regexp-in-string "\n" "" string))  
+
+(defun file-short-name (file)
+  "Base file/directory name. Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
+  (printable-string (file-name-nondirectory (directory-file-name file))))
+
 
 
 (defun ztree (path)
@@ -406,9 +434,15 @@ apparently shall not be visible"
     (let ((buf (get-buffer-create (concat "*Directory " path " tree*"))))
       (switch-to-buffer buf)
       (ztree-mode)
+      ;; configure ztree to work with directories
       (setq ztree-start-node (expand-file-name (substitute-in-file-name path)))
       (setq ztree-expanded-nodes-list (list ztree-start-node))
       (setq ztree-filter-list (list ztree-hidden-files-regexp))
+      (setq ztree-tree-header-fun 'ztree-insert-buffer-header)
+      (setq ztree-node-short-name-fun 'file-short-name)
+      (setq ztree-node-is-expandable-fun 'file-directory-p)
+      (setq ztree-node-equal-fun 'string-equal)
+      (setq ztree-node-contents-fun #'(lambda (x) (directory-files x 'full)))
       (ztree-refresh-buffer))))
 
 
