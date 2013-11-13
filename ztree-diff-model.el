@@ -12,12 +12,6 @@
     (setq node (plist-put node 'different different))))
 
 
-(defun file-short-name (file)
-  "Base file/directory name. Taken from
- http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (printable-string (file-name-nondirectory (directory-file-name file))))
-
-
 (defun ztree-diff-model-files-are-different (file1 file2)
   (let ((diff-output (shell-command-to-string (concat "diff -q" " " file1 " " file2))))
     (> (length diff-output) 2)))
@@ -60,9 +54,5 @@
                     result))))))
     result))
 
-(dolist (diff 
-         (ztree-diff-model-traverse "/Users/alexeyv/Sources/Science/libsexp"
-                                    "/Users/alexeyv/Sources/Science/libsexpv1"))
-  (print diff))
                               
         
