@@ -200,7 +200,8 @@ node name for the line specified"
 
 (defun ztree-is-expanded-node (node)
   "Find if the node is in the list of expanded nodes"
-  (ztree-find ztree-expanded-nodes-list #'(lambda (x) (funcall ztree-node-equal-fun x node))))
+  (ztree-find ztree-expanded-nodes-list
+              #'(lambda (x) (funcall ztree-node-equal-fun x node))))
 
 
 (defun ztree-set-parent-for-line (line parent)
@@ -223,19 +224,26 @@ node name for the line specified"
   (let* ((line (line-number-at-pos))
          (node (ztree-find-node-in-line line)))
     (when node
-      (if (funcall ztree-node-is-expandable-fun node)  ; only for expandable nodes
+      (if (funcall ztree-node-is-expandable-fun node)
+          ;; only for expandable nodes
           (ztree-toggle-expand-state node)
-        nil)                            ; do nothing leafs files for now
-      (let ((current-pos (window-start))) ; save the current window start position
-        (ztree-refresh-buffer line)    ; refresh buffer and scroll back to the saved line
-        (set-window-start (selected-window) current-pos))))) ; restore window start position
+        ;; do nothing leafs files for now
+        nil)
+      ;; save the current window start position
+      (let ((current-pos (window-start)))
+        ;; refresh buffer and scroll back to the saved line
+        (ztree-refresh-buffer line)
+        ;; restore window start position
+        (set-window-start (selected-window) current-pos))))) 
 
 
 (defun ztree-toggle-expand-state (node)
   "Toggle expanded/collapsed state for nodes"
   (if (ztree-is-expanded-node node)
-      (setq ztree-expanded-nodes-list (ztree-filter #'(lambda (x) (not (funcall ztree-node-equal-fun node x)))
-                                                    ztree-expanded-nodes-list))
+      (setq ztree-expanded-nodes-list
+            (ztree-filter
+             #'(lambda (x) (not (funcall ztree-node-equal-fun node x)))
+             ztree-expanded-nodes-list))
     (push node ztree-expanded-nodes-list)))
 
 
@@ -262,8 +270,12 @@ if previous key was Backspace - close the node"
   "Returns pair of 2 elements: list of expandable nodes and
 list of leafs"
   (let ((nodes (funcall ztree-node-contents-fun path)))
-    (cons (ztree-filter #'(lambda (f) (funcall ztree-node-is-expandable-fun f)) nodes)
-          (ztree-filter #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f))) nodes))))
+    (cons (ztree-filter
+           #'(lambda (f) (funcall ztree-node-is-expandable-fun f))
+           nodes)
+          (ztree-filter
+           #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f)))
+           nodes))))
 
 (defun ztree-node-is-in-filter-list (node)
   "Determine if the node is in filter list (and therefore
@@ -355,7 +367,8 @@ apparently shall not be visible"
         (dolist (node nodes)
           (let ((short-node-name (funcall ztree-node-short-name-fun node)))
             (unless (ztree-node-is-in-filter-list short-node-name)
-              (push (ztree-insert-node-contents-1 node (1+ offset)) children))))
+              (push (ztree-insert-node-contents-1 node (1+ offset))
+                    children))))
         (dolist (leaf leafs)
           (let ((short-leaf-name (funcall ztree-node-short-name-fun leaf)))
             (when (not (ztree-node-is-in-filter-list short-leaf-name))
@@ -380,11 +393,13 @@ apparently shall not be visible"
         (progn                          
           (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
           (insert " ")
-          (put-text-property 0 (length short-name) 'face 'ztreep-node-face short-name)
+          (put-text-property 0 (length short-name)
+                             'face 'ztreep-node-face short-name)
           (insert short-name))
       (progn
         (insert "    ")
-        (put-text-property 0 (length short-name) 'face 'ztreep-leaf-face short-name)
+        (put-text-property 0 (length short-name)
+                           'face 'ztreep-leaf-face short-name)
         (insert short-name)))
     (push (cons node (line-number-at-pos)) ztree-node-to-line-list)
     (newline)
@@ -422,7 +437,8 @@ apparently shall not be visible"
   (replace-regexp-in-string "\n" "" string))  
 
 (defun file-short-name (file)
-  "Base file/directory name. Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
+  "Base file/directory name. Taken from
+ http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (printable-string (file-name-nondirectory (directory-file-name file))))
 
 
