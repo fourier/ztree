@@ -60,20 +60,21 @@ including . and ..")
 ;; Globals
 ;;
 
-(defvar ztree-expanded-dir-list nil
-  "A list of Expanded directory entries.")
-(make-variable-buffer-local 'ztree-expanded-dir-list)
+(defvar ztree-expanded-nodes-list nil
+  "A list of Expanded nodes (i.e. directories) entries.")
+(make-variable-buffer-local 'ztree-expanded-nodes-list)
 
-(defvar ztree-start-dir nil
-  "Start directory for the window.")
-(make-variable-buffer-local 'ztree-start-dir)
+(defvar ztree-start-node nil
+  "Start node(i.e. directory) for the window.")
+(make-variable-buffer-local 'ztree-start-node)
 
-(defvar ztree-files-info nil
-  "List of tuples with full file name and the line.")
-(make-variable-buffer-local 'ztree-files-info)
+(defvar ztree-node-to-line-list nil
+  "List of tuples with full node(i.e. file/directory name
+ and the line.")
+(make-variable-buffer-local 'ztree-node-to-line-list)
 
 (defvar ztree-filter-list nil
-  "List of regexp for file/directory names to filter out")
+  "List of regexp for node names to filter out")
 (make-variable-buffer-local 'ztree-filter-list)
 
 (defvar ztree-start-line nil
@@ -103,49 +104,49 @@ in order to not to use cl package and lexical-let")
     (define-key map [double-mouse-1] 'ztree-perform-action)
     (define-key map (kbd "g") 'ztree-refresh-buffer)
     (if window-system
-        (define-key map (kbd "<backspace>") 'ztree-move-up-directory)
-      (define-key map "\177" 'ztree-move-up-directory))
+        (define-key map (kbd "<backspace>") 'ztree-move-up-in-tree)
+      (define-key map "\177" 'ztree-move-up-in-tree))
     map)
   "Keymap for `ztree-mode'.")
 
 (defface ztreep-header-face
   '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
-   (((background dark)) (:height 1.2 :foreground "lightblue" :weight bold))
+    (((background dark)) (:height 1.2 :foreground "lightblue" :weight bold))
     (t :height 1.2 :foreground "darkblue" :weight bold))
   "*Face used for the header in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-header-face 'ztreep-header-face)
 
 
-(defface ztreep-dir-face
-    '((((background dark)) (:foreground "#ffffff"))
-      (((type nil))        (:inherit 'font-lock-function-name-face))
-      (t                   (:foreground "Blue")))
-  "*Face used for directories in Ztree buffer."
+(defface ztreep-node-face
+  '((((background dark)) (:foreground "#ffffff"))
+    (((type nil))        (:inherit 'font-lock-function-name-face))
+    (t                   (:foreground "Blue")))
+  "*Face used for expandable entries(directories etc) in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
-(defvar ztreep-dir-face 'ztreep-dir-face)
+(defvar ztreep-node-face 'ztreep-node-face)
 
-(defface ztreep-file-face
-    '((((background dark)) (:foreground "cyan1"))
-      (((type nil))        (:inherit 'font-lock-variable-name-face))
-      (t                   (:foreground "darkblue")))
-  "*Face used for files in Ztree buffer."
+(defface ztreep-leaf-face
+  '((((background dark)) (:foreground "cyan1"))
+    (((type nil))        (:inherit 'font-lock-variable-name-face))
+    (t                   (:foreground "darkblue")))
+  "*Face used for not expandable nodes(leafs, i.e. files) in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
-(defvar ztreep-file-face 'ztreep-file-face)
+(defvar ztreep-leaf-face 'ztreep-leaf-face)
 
 (defface ztreep-arrow-face
-    '((((background dark)) (:foreground "#7f7f7f"))
-      (t                   (:inherit 'font-lock-comment-face)))
+  '((((background dark)) (:foreground "#7f7f7f"))
+    (t                   (:inherit 'font-lock-comment-face)))
   "*Face used for arrows in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-arrow-face 'ztreep-arrow-face)
 
-(defface ztreep-dirsign-face
-    '((((background dark)) (:foreground "#7f7fff"))
-      (t                   (:inherit 'font-lock-comment-face)))
-  "*Face used for directory sign [+] in Ztree buffer."
+(defface ztreep-expand-sign-face
+  '((((background dark)) (:foreground "#7f7fff"))
+    (t                   (:inherit 'font-lock-comment-face)))
+  "*Face used for expand sign [+] in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
-(defvar ztreep-dirsign-face 'ztreep-dirsign-face)
+(defvar ztreep-expand-sign-face 'ztreep-expand-sign-face)
 
 
 ;;;###autoload
@@ -166,24 +167,26 @@ Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
   (delq nil
         (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
-(defun ztree-find-file-in-line (line)
-  "Search through the array of filename-line pairs and return the
-filename for the line specified"
-  (let ((found (ztree-find ztree-files-info
+(defun ztree-find-node-in-line (line)
+  "Search through the array of node-line pairs and return the
+node name for the line specified"
+  (let ((found (ztree-find ztree-node-to-line-list
                            #'(lambda (entry) (eq line (cdr entry))))))
     (when found
       (car found))))
 
-(defun ztree-is-expanded-dir (dir)
-  "Find if the directory is in the list of expanded directories"
-  (ztree-find ztree-expanded-dir-list #'(lambda (x) (string-equal x dir))))
+(defun ztree-is-expanded-node (node)
+  "Find if the node is in the list of expanded nodes"
+  (ztree-find ztree-expanded-nodes-list #'(lambda (x) (string-equal x node))))
 
 
 (defun ztree-set-parent-for-line (line parent)
   (aset ztree-parent-lines-array (- line ztree-start-line) parent))
 
 (defun ztree-get-parent-for-line (line)
-  (aref ztree-parent-lines-array (- line ztree-start-line)))
+  (when (and (>= line ztree-start-line)
+             (< line (+ (length ztree-parent-lines-array) ztree-start-line)))
+    (aref ztree-parent-lines-array (- line ztree-start-line))))
 
 (defun scroll-to-line (line)
   "Recommended way to set the cursor to specified line"
@@ -192,47 +195,45 @@ filename for the line specified"
 
 
 (defun ztree-perform-action ()
-  "Toggle expand/collapsed state for directories"
+  "Toggle expand/collapsed state for nodes"
   (interactive)
   (let* ((line (line-number-at-pos))
-         (file (ztree-find-file-in-line line)))
+         (file (ztree-find-node-in-line line)))
     (when file
       (if (file-directory-p file)  ; only for directories
-          (ztree-toggle-dir-state file)
+          (ztree-toggle-expand-state file)
         nil)                            ; do nothiang for files for now
       (let ((current-pos (window-start))) ; save the current window start position
         (ztree-refresh-buffer line)    ; refresh buffer and scroll back to the saved line
         (set-window-start (selected-window) current-pos))))) ; restore window start position
 
 
-(defun ztree-toggle-dir-state (dir)
-  "Toggle expanded/collapsed state for directories"
-  (if (ztree-is-expanded-dir dir)
-      (setq ztree-expanded-dir-list (ztree-filter #'(lambda (x) (not (string-equal dir x)))
-                                                  ztree-expanded-dir-list))
-    (push dir ztree-expanded-dir-list)))
+(defun ztree-toggle-expand-state (node)
+  "Toggle expanded/collapsed state for nodes"
+  (if (ztree-is-expanded-node node)
+      (setq ztree-expanded-nodes-list (ztree-filter #'(lambda (x) (not (string-equal node x)))
+                                                  ztree-expanded-nodes-list))
+    (push node ztree-expanded-nodes-list)))
 
 
-(defun ztree-move-up-directory ()
-  "Action on Backspace key: to jump to the line of a parent directory or
-if previous key was Backspace - close the directory"
+(defun ztree-move-up-in-tree ()
+  "Action on Backspace key: to jump to the line of a parent node or
+if previous key was Backspace - close the node"
   (interactive)
   (when ztree-parent-lines-array
     (let* ((line (line-number-at-pos (point)))
            (parent (ztree-get-parent-for-line line)))
+      (when parent
+        (if (and (equal last-command 'ztree-move-up-in-tree)
+                 (not ztree-count-subsequent-bs))
+            (progn 
+              (ztree-toggle-expand-state
+               (ztree-find-node-in-line line))
+              (setq ztree-count-subsequent-bs t)
+              (ztree-refresh-buffer line))
+          (progn (setq ztree-count-subsequent-bs nil)
+                 (scroll-to-line parent)))))))
 
-  (if (and (equal last-command 'ztree-move-up-directory)
-           (not ztree-count-subsequent-bs))
-      (progn 
-        (ztree-toggle-dir-state
-         (ztree-find-file-in-line line))
-        (setq ztree-count-subsequent-bs t)
-        (ztree-refresh-buffer line))
-    (progn (setq ztree-count-subsequent-bs nil)
-           (scroll-to-line parent))))))
-      
-      
-  
 
 (defun file-basename (file)
   "Base file/directory name. Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
@@ -250,10 +251,10 @@ list of files"
     (cons (ztree-filter #'(lambda (f) (file-directory-p f)) files)
           (ztree-filter #'(lambda (f) (not (file-directory-p f))) files))))
 
-(defun ztree-file-is-in-filter-list (file)
-  "Determine if the file is in filter list (and therefore
+(defun ztree-node-is-in-filter-list (node)
+  "Determine if the node is in filter list (and therefore
 apparently shall not be visible"
-  (ztree-find ztree-filter-list #'(lambda (rx) (string-match rx file))))
+  (ztree-find ztree-filter-list #'(lambda (rx) (string-match rx node))))
 
 (defun ztree-draw-char (c x y)
   "Draw char c at the position (1-based) (x y)"
@@ -267,18 +268,18 @@ apparently shall not be visible"
 
 (defun ztree-draw-vertical-line (y1 y2 x)
   (if (> y1 y2)
-    (dotimes (y (1+ (- y1 y2)))
-      (ztree-draw-char ?\| x (+ y2 y)))
+      (dotimes (y (1+ (- y1 y2)))
+        (ztree-draw-char ?\| x (+ y2 y)))
     (dotimes (y (1+ (- y2 y1)))
       (ztree-draw-char ?\| x (+ y1 y)))))
-        
+
 (defun ztree-draw-horizontal-line (x1 x2 y)
   (if (> x1 x2)
-    (dotimes (x (1+ (- x1 x2)))
-      (ztree-draw-char ?\- (+ x2 x) y))
+      (dotimes (x (1+ (- x1 x2)))
+        (ztree-draw-char ?\- (+ x2 x) y))
     (dotimes (x (1+ (- x2 x1)))
       (ztree-draw-char ?\- (+ x1 x) y))))
-  
+
 
 (defun ztree-draw-tree (tree offset)
   "Draw the tree of lines with parents"
@@ -300,11 +301,11 @@ apparently shall not be visible"
           (ztree-draw-tree child (1+ offset))
           (if (listp child)
               (ztree-draw-horizontal-line (+ 3 (* offset 4))
-                                             (+ 4 (* offset 4))
-                                             (car child))
+                                          (+ 4 (* offset 4))
+                                          (car child))
             (ztree-draw-horizontal-line (+ 3 (* offset 4))
-                                           (+ 7 (* offset 4))
-                                           child)))))))
+                                        (+ 7 (* offset 4))
+                                        child)))))))
 
 (defun ztree-fill-parent-array (tree)
   ;; set the root line
@@ -316,35 +317,35 @@ apparently shall not be visible"
         (progn 
           (ztree-set-parent-for-line (car child) root)
           (ztree-fill-parent-array child))))))
-  
 
-(defun ztree-insert-directory-contents (path)
-  ;; insert path contents with initial offset 0
-  (let ((tree (ztree-insert-directory-contents-1 path 0))
+
+(defun ztree-insert-node-contents (path)
+  ;; insert node contents with initial offset 0
+  (let ((tree (ztree-insert-node-contents-1 path 0))
         (num-of-items (- (line-number-at-pos (point)) ztree-start-line)))
     (setq ztree-parent-lines-array (make-vector num-of-items 0))
     (ztree-set-parent-for-line ztree-start-line ztree-start-line)
     (ztree-fill-parent-array tree)
     (ztree-draw-tree tree 0)))
 
-  
 
-(defun ztree-insert-directory-contents-1 (path offset)
-  (let* ((expanded (ztree-is-expanded-dir path))
+
+(defun ztree-insert-node-contents-1 (path offset)
+  (let* ((expanded (ztree-is-expanded-node path))
          (root-line (ztree-insert-entry path offset expanded))
          (children nil))
     (when expanded 
       (let* ((contents (ztree-get-directory-contens path))
-             (dirs (car contents))
-             (files (cdr contents)))
-        (dolist (dir dirs)
-          (let ((short-dir-name (file-basename dir)))
-            (unless (ztree-file-is-in-filter-list short-dir-name)
-              (push (ztree-insert-directory-contents-1 dir (1+ offset)) children))))
-        (dolist (file files)
-          (let ((short-file-name (file-basename file)))
-            (when (not (ztree-file-is-in-filter-list short-file-name))
-              (push (ztree-insert-entry file (1+ offset) nil)
+             (nodes (car contents))
+             (leafs (cdr contents)))
+        (dolist (node nodes)
+          (let ((short-dir-name (file-basename node)))
+            (unless (ztree-node-is-in-filter-list short-dir-name)
+              (push (ztree-insert-node-contents-1 node (1+ offset)) children))))
+        (dolist (leaf leafs)
+          (let ((short-file-name (file-basename leaf)))
+            (when (not (ztree-node-is-in-filter-list short-file-name))
+              (push (ztree-insert-entry leaf (1+ offset) nil)
                     children))))))
     (cons root-line children)))
 
@@ -354,7 +355,7 @@ apparently shall not be visible"
                       (insert "[" (if exp "-" "+") "]")
                       (set-text-properties (- (point) 3)
                                            (point)
-                                           '(face ztreep-dirsign-face))))
+                                           '(face ztreep-expand-sign-face))))
         (is-dir (file-directory-p path))
         (line (line-number-at-pos)))
     (when (> offset 0)
@@ -365,13 +366,13 @@ apparently shall not be visible"
         (progn                          
           (funcall dir-sign expanded)   ; for directory insert "[+/-]"
           (insert " ")
-          (put-text-property 0 (length short-name) 'face 'ztreep-dir-face short-name)
+          (put-text-property 0 (length short-name) 'face 'ztreep-node-face short-name)
           (insert short-name))
       (progn
         (insert "    ")
-        (put-text-property 0 (length short-name) 'face 'ztreep-file-face short-name)
+        (put-text-property 0 (length short-name) 'face 'ztreep-leaf-face short-name)
         (insert short-name)))
-    (push (cons path (line-number-at-pos)) ztree-files-info)
+    (push (cons path (line-number-at-pos)) ztree-node-to-line-list)
     (newline)
     line))
 
@@ -388,12 +389,12 @@ apparently shall not be visible"
 (defun ztree-refresh-buffer (&optional line)
   (interactive)
   (when (and (equal major-mode 'ztree-mode)
-             (boundp 'ztree-start-dir))
-    (setq ztree-files-info nil)
+             (boundp 'ztree-start-node))
+    (setq ztree-node-to-line-list nil)
     (toggle-read-only)
     (erase-buffer)
     (ztree-insert-buffer-header)
-    (ztree-insert-directory-contents ztree-start-dir)
+    (ztree-insert-node-contents ztree-start-node)
     (scroll-to-line (if line line ztree-start-line))
     (toggle-read-only)))
 
@@ -405,8 +406,8 @@ apparently shall not be visible"
     (let ((buf (get-buffer-create (concat "*Directory " path " tree*"))))
       (switch-to-buffer buf)
       (ztree-mode)
-      (setq ztree-start-dir (expand-file-name (substitute-in-file-name path)))
-      (setq ztree-expanded-dir-list (list ztree-start-dir))
+      (setq ztree-start-node (expand-file-name (substitute-in-file-name path)))
+      (setq ztree-expanded-nodes-list (list ztree-start-node))
       (setq ztree-filter-list (list ztree-hidden-files-regexp))
       (ztree-refresh-buffer))))
 
