@@ -10,6 +10,7 @@ Simple text-mode directory tree for Emacs. See screenshots below for GUI and the
 Add the following to your .emacs file:
 
 ```scheme
+(push (substitute-in-file-name "path-to-ztree-directory") load-path)
 (require 'ztree)
 ```
 
