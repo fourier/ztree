@@ -31,9 +31,6 @@
         (file-directory-p left)
       (file-directory-p right))))
 
-
-
-
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files using external diff. Returns t if equal"
   (let ((diff-output (shell-command-to-string (concat "diff -q" " " file1 " " file2))))
@@ -54,15 +51,15 @@
     (dolist (file files)
       (if (file-directory-p file)
           (push (ztree-diff-model-create-node
-                 (when (eq side 'left) path)
-                 (when (eq side 'right) path)
+                 (when (eq side 'left) file)
+                 (when (eq side 'right) file)
                  (file-short-name file)
                  (ztree-diff-model-subtree file side)
                  'new)
                 result)
         (push (ztree-diff-model-create-node
-               (when (eq side 'left) path)
-               (when (eq side 'right) path)
+               (when (eq side 'left) file)
+               (when (eq side 'right) file)
                (file-short-name file)
                nil
                'new)
