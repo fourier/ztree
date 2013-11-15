@@ -99,7 +99,8 @@ including . and ..")
                   'file-directory-p
                   'string-equal
                   '(lambda (x) (directory-files x 'full))
-                  nil))))
+                  nil                   ; face
+                  nil))))               ; action
 
 
 (provide 'ztree)

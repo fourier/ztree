@@ -123,6 +123,10 @@ the buffer is split to 2 trees")
   "Function returning face for the node")
 (make-variable-buffer-local 'ztree-node-face-fun)
 
+(defun ztree-node-action-fun nil
+  "Function called when Enter/Space pressed on the node")
+(make-variable-buffer-local 'ztree-node-action-fun)
+
 
 ;;
 ;; Major mode definitions
@@ -214,7 +218,8 @@ node for the line specified"
           ;; only for expandable nodes
           (ztree-toggle-expand-state node)
         ;; do nothing leafs files for now
-        nil)
+        (when ztree-node-action-fun
+          (funcall ztree-node-action-fun node)))
       ;; save the current window start position
       (let ((current-pos (window-start)))
         ;; refresh buffer and scroll back to the saved line
@@ -496,6 +501,7 @@ apparently shall not be visible"
                    equal-fun
                    children-fun
                    face-fun
+                   action-fun
                    &optional node-side-fun
                    )
   (let ((buf (get-buffer-create buffer-name)))
@@ -511,6 +517,7 @@ apparently shall not be visible"
     (setq ztree-node-equal-fun equal-fun)
     (setq ztree-node-contents-fun children-fun)
     (setq ztree-node-face-fun face-fun)
+    (setq ztree-node-action-fun action-fun)
     (setq ztree-node-side-fun node-side-fun)
     (ztree-refresh-buffer)))
 

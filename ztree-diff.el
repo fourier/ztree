@@ -91,6 +91,12 @@ including . and ..")
   (insert-with-face "==============" ztreep-diff-header-face)
   (newline))
 
+(defun ztree-diff-model-action (node)
+  (let ((left (ztree-diff-model-get-left-path node))
+        (right (ztree-diff-model-get-right-path node)))
+    (when (and left right)
+      (ediff left right))))
+
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
@@ -105,6 +111,7 @@ including . and ..")
                 'equal
                 'ztree-diff-model-children
                 'ztree-diff-model-face
+                'ztree-diff-model-action
                 'ztree-diff-model-side)))
 
 
