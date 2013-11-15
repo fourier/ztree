@@ -172,6 +172,8 @@ the buffer is split to 2 trees")
 
 ;;;###autoload
 (define-derived-mode ztree-mode special-mode "Ztree"
+  ;; only spaces
+  (setq indent-tabs-mode nil)
   "A major mode for displaying the directory tree in text mode.")
 
 
@@ -292,30 +294,34 @@ apparently shall not be visible"
       (ztree-draw-char ?\- (+ x1 x) y))))
 
 
-(defun ztree-draw-tree (tree offset)
+(defun ztree-draw-tree (tree depth start-offset)
   "Draw the tree of lines with parents"
   (if (atom tree)
       nil
-    (let ((root (car tree))
-          (children (cdr tree)))
+    (let* ((root (car tree))
+          (children (cdr tree))
+          (offset (+ start-offset (* depth 4)))
+          (line-start (+ 3 offset))
+          (line-end-leaf (+ 7 offset))
+          (line-end-node (+ 4 offset)))
       (when children
         ;; draw the line to the last child
         ;; since we push'd children to the list, the last line
         ;; is the first
         (let ((last-child (car children))
-              (x-offset (+ 2 (* offset 4))))
+              (x-offset (+ 2 offset)))
           (if (atom last-child)
               (ztree-draw-vertical-line (1+ root) last-child x-offset)
             (ztree-draw-vertical-line (1+ root) (car last-child) x-offset)))
         ;; draw recursively
         (dolist (child children)
-          (ztree-draw-tree child (1+ offset))
+          (ztree-draw-tree child (1+ depth) start-offset)
           (if (listp child)
-              (ztree-draw-horizontal-line (+ 3 (* offset 4))
-                                          (+ 4 (* offset 4))
+              (ztree-draw-horizontal-line line-start
+                                          line-end-node
                                           (car child))
-            (ztree-draw-horizontal-line (+ 3 (* offset 4))
-                                        (+ 7 (* offset 4))
+            (ztree-draw-horizontal-line line-start
+                                        line-end-leaf
                                         child)))))))
 
 (defun ztree-fill-parent-array (tree)
@@ -340,14 +346,23 @@ apparently shall not be visible"
         ;; number of 'rows' in tree is last line minus start line
         (num-of-items (- (line-number-at-pos (point)) ztree-start-line)))
     ;; create a parents array to store parents of lines
+    ;; parents array used for navigation with the BS 
     (setq ztree-parent-lines-array (make-vector num-of-items 0))
-    ;; set the root node in lines array
+    ;; set the root node in lines parents array
     (ztree-set-parent-for-line ztree-start-line ztree-start-line)
-    ;; fill the parent arrray
+    ;; fill the parent arrray from the tree
     (ztree-fill-parent-array tree)
-    ;; and draw the tree, having the parent array in place
-    (ztree-draw-tree tree 0)))
-
+    ;; draw the tree starting with depth 0 and offset 0
+    (ztree-draw-tree tree 0 0)
+    ;; for the 2-sided tree we need to draw the vertical line
+    ;; and an additional tree
+    (if ztree-node-side-fun             ; 2-sided tree
+        (let ((width (window-width)))
+          ;; draw the vertical line in the middle of the window
+          (ztree-draw-vertical-line ztree-start-line
+                                    (1- (+ num-of-items ztree-start-line))
+                                    (/ width 2))
+          (ztree-draw-tree tree 0 (/ width 2))))))
 
 
 (defun ztree-insert-node-contents-1 (node depth)
@@ -390,13 +405,15 @@ apparently shall not be visible"
         (short-name (funcall ztree-node-short-name-fun node)))
     (if ztree-node-side-fun           ; 2-sided tree
         (let ((right-short-name short-name)
-              (side (funcall ztree-node-side-fun node)))
+              (side (funcall ztree-node-side-fun node))
+              (width (window-width)))
           (when (eq side 'left)  (setq right-short-name ""))
           (when (eq side 'right) (setq short-name ""))
           (ztree-insert-single-entry short-name depth expandable expanded 0)
-          (ztree-insert-single-entry right-short-name depth expandable expanded 40))
+          (ztree-insert-single-entry right-short-name depth expandable expanded
+                                     (1+ (/ width 2))))
       (ztree-insert-single-entry short-name depth expandable expanded 0))
-    (push (cons node line) ztree-node-to-line-list)    
+      (push (cons node line) ztree-node-to-line-list)    
     (newline)
     line))
 
