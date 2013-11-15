@@ -60,10 +60,10 @@
   "Start node(i.e. directory) for the window.")
 (make-variable-buffer-local 'ztree-start-node)
 
-(defvar ztree-node-to-line-list nil
+(defvar ztree-line-to-node-table nil
   "List of tuples with full node(i.e. file/directory name
  and the line.")
-(make-variable-buffer-local 'ztree-node-to-line-list)
+(make-variable-buffer-local 'ztree-line-to-node-table)
 
 (defvar ztree-filter-list nil
   "List of regexp for node names to filter out")
@@ -181,11 +181,8 @@ the buffer is split to 2 trees")
 
 (defun ztree-find-node-in-line (line)
   "Search through the array of node-line pairs and return the
-node name for the line specified"
-  (let ((found (ztree-find ztree-node-to-line-list
-                           #'(lambda (entry) (= line (cdr entry))))))
-    (when found
-      (car found))))
+node for the line specified"
+  (gethash line ztree-line-to-node-table))
 
 (defun ztree-is-expanded-node (node)
   "Find if the node is in the list of expanded nodes"
@@ -437,7 +434,7 @@ apparently shall not be visible"
                                        (funcall ztree-node-face-fun node)))
           (puthash line side ztree-line-tree-properties))
       (ztree-insert-single-entry short-name depth expandable expanded 0))
-      (push (cons node line) ztree-node-to-line-list)    
+    (puthash line node ztree-line-to-node-table)    
     (newline)
     line))
 
@@ -475,7 +472,7 @@ apparently shall not be visible"
   (interactive)
   (when (and (equal major-mode 'ztree-mode)
              (boundp 'ztree-start-node))
-    (setq ztree-node-to-line-list nil)
+    (setq ztree-line-to-node-table (make-hash-table))
     ;; create a hash table of node properties for line
     ;; used in 2-side tree mode
     (when ztree-node-side-fun
