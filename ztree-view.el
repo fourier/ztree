@@ -105,6 +105,12 @@ for example if the node is a directory")
   "Function returning list of node contents")
 (make-variable-buffer-local 'ztree-node-contents-fun)
 
+(defun ztree-node-side-fun nil
+  "Function returning position of the node: 'left, 'right or 'both.
+If not defined(by default) - using single screen tree, otherwise
+the buffer is split to 2 trees")
+(make-variable-buffer-local 'ztree-node-side-fun)
+  
 
 ;;
 ;; Major mode definitions
@@ -247,9 +253,9 @@ if previous key was Backspace - close the node"
       (when parent
         (if (and (equal last-command 'ztree-move-up-in-tree)
                  (not ztree-count-subsequent-bs))
-            (progn 
-              (ztree-toggle-expand-state
-               (ztree-find-node-in-line line))
+            (let ((node (ztree-find-node-in-line line)))
+              (when (ztree-is-expanded-node node)
+                (ztree-toggle-expand-state node))
               (setq ztree-count-subsequent-bs t)
               (ztree-refresh-buffer line))
           (progn (setq ztree-count-subsequent-bs nil)
@@ -336,7 +342,7 @@ apparently shall not be visible"
 
 
 (defun ztree-insert-node-contents (path)
-  ;; insert node contents with initial offset 0
+  ;; insert node contents with initial depth 0
   (let ((tree (ztree-insert-node-contents-1 path 0))
         (num-of-items (- (line-number-at-pos (point)) ztree-start-line)))
     (setq ztree-parent-lines-array (make-vector num-of-items 0))
@@ -346,9 +352,9 @@ apparently shall not be visible"
 
 
 
-(defun ztree-insert-node-contents-1 (node offset)
+(defun ztree-insert-node-contents-1 (node depth)
   (let* ((expanded (ztree-is-expanded-node node))
-         (root-line (ztree-insert-entry node offset expanded))
+         (root-line (ztree-insert-entry node depth expanded))
          (children nil))
     (when expanded 
       (let* ((contents (ztree-get-splitted-node-contens node))
@@ -357,29 +363,40 @@ apparently shall not be visible"
         (dolist (node nodes)
           (let ((short-node-name (funcall ztree-node-short-name-fun node)))
             (unless (ztree-node-is-in-filter-list short-node-name)
-              (push (ztree-insert-node-contents-1 node (1+ offset))
+              (push (ztree-insert-node-contents-1 node (1+ depth))
                     children))))
         (dolist (leaf leafs)
           (let ((short-leaf-name (funcall ztree-node-short-name-fun leaf)))
             (when (not (ztree-node-is-in-filter-list short-leaf-name))
-              (push (ztree-insert-entry leaf (1+ offset) nil)
+              (push (ztree-insert-entry leaf (1+ depth) nil)
                     children))))))
     (cons root-line children)))
 
-(defun ztree-insert-entry (node offset expanded)
+(defun ztree-insert-entry (node depth expanded)
+  (let ((line (line-number-at-pos))
+        (expandable (funcall ztree-node-is-expandable-fun node)))
+    (ztree-insert-single-entry node depth expandable expanded 0)
+   ;; (ztree-insert-single-entry node depth expandable expanded 40)
+    (push (cons node line) ztree-node-to-line-list)    
+    (newline)
+    line))
+  ;; (if (not ztree-node-side-fun)
+  ;;     ztree-insert-single-entry (node depth expanded 0))
+
+(defun ztree-insert-single-entry (node depth expandable expanded offset)
   (let ((short-name (funcall ztree-node-short-name-fun node))
         (node-sign #'(lambda (exp)
                        (insert "[" (if exp "-" "+") "]")
                        (set-text-properties (- (point) 3)
                                             (point)
-                                            '(face ztreep-expand-sign-face))))
-        (is-expandable (funcall ztree-node-is-expandable-fun node))
-        (line (line-number-at-pos)))
-    (when (> offset 0)
-      (dotimes (i offset)
+                                            '(face ztreep-expand-sign-face)))))
+    (move-to-column offset t)
+    ;;(kill-line)
+    (when (> depth 0)
+      (dotimes (i depth)
         (insert " ")
         (insert-char ?\s 3)))           ; insert 3 spaces
-    (if is-expandable
+    (if expandable
         (progn                          
           (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
           (insert " ")
@@ -390,10 +407,7 @@ apparently shall not be visible"
         (insert "    ")
         (put-text-property 0 (length short-name)
                            'face 'ztreep-leaf-face short-name)
-        (insert short-name)))
-    (push (cons node (line-number-at-pos)) ztree-node-to-line-list)
-    (newline)
-    line))
+        (insert short-name)))))
 
 
 (defun ztree-refresh-buffer (&optional line)
@@ -421,6 +435,7 @@ apparently shall not be visible"
                    expandable-p
                    equal-fun
                    children-fun
+                   &optional node-side-fun
                    )
   (let ((buf (get-buffer-create buffer-name)))
       (switch-to-buffer buf)
@@ -434,6 +449,7 @@ apparently shall not be visible"
       (setq ztree-node-is-expandable-fun expandable-p)
       (setq ztree-node-equal-fun equal-fun)
       (setq ztree-node-contents-fun children-fun)
+      (setq ztree-node-side-fun node-side-fun)
       (ztree-refresh-buffer)))
 
 

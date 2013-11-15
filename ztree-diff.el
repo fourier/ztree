@@ -52,7 +52,8 @@ including . and ..")
                 'ztree-diff-model-short-name
                 'ztree-diff-model-is-directory
                 'equal
-                'ztree-diff-model-children)))
+                'ztree-diff-model-children
+                'ztree-diff-model-side)))
 
 
 (provide 'ztree-diff)

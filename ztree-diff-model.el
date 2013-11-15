@@ -31,6 +31,12 @@
         (file-directory-p left)
       (file-directory-p right))))
 
+(defun ztree-diff-model-side (node)
+  (let ((left  (plist-get node 'left))
+        (rigth (plist-get node 'right)))
+  (if (and left right) 'both
+    (if left 'left 'right))))
+
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files using external diff. Returns t if equal"
   (let ((diff-output (shell-command-to-string (concat "diff -q" " " file1 " " file2))))
@@ -157,7 +163,7 @@ the rest is the combined list of nodes"
   (let ((traverse (ztree-diff-model-traverse dir1 dir2)))
     (ztree-diff-model-create-node dir1 dir2
                                   (concat (file-short-name dir1)
-                                          " vs "
+                                          " <--> "
                                           (file-short-name dir2))
                                   (cdr traverse)
                                   (car traverse))))
