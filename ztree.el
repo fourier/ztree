@@ -49,6 +49,7 @@
 ;;
 ;;; Code:
 
+(require 'ztree-util)
 (require 'ztree-view)
 
 ;;
@@ -69,16 +70,6 @@ including . and ..")
   (newline)
   (insert "==============")
   (newline))
-
-(defun printable-string (string)
-  "Strip newline character from file names, like 'Icon\n'"
-  (replace-regexp-in-string "\n" "" string))  
-
-(defun file-short-name (file)
-  "Base file/directory name. Taken from
- http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (printable-string (file-name-nondirectory (directory-file-name file))))
-
 
 (defun ztree (path)
   "Creates an interactive buffer with the directory tree of the path given"

@@ -1,5 +1,7 @@
 ;; Diff model
 
+(require 'ztree-util)
+
 ;; different = {nil, 'new, 'diff}
 (defun ztree-diff-model-create-node (left-full-path right-full-path short-name children different)
   (let (node)
@@ -25,7 +27,7 @@
     (plist-get node 'different))
 
 (defun ztree-diff-model-is-directory (node)
-  (let ((left (plist-get node 'left))
+  (let ((left  (plist-get node 'left))
         (right (plist-get node 'right)))
     (if left
         (file-directory-p left)
@@ -33,7 +35,7 @@
 
 (defun ztree-diff-model-side (node)
   (let ((left  (plist-get node 'left))
-        (rigth (plist-get node 'right)))
+        (right (plist-get node 'right)))
   (if (and left right) 'both
     (if left 'left 'right))))
 
