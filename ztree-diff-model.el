@@ -162,13 +162,17 @@ the rest is the combined list of nodes"
     (error "Path %s is not a directory" dir1))
   (when (not (file-directory-p dir2))
     (error "Path %s is not a directory" dir2))
-  (let ((traverse (ztree-diff-model-traverse dir1 dir2)))
-    (ztree-diff-model-create-node dir1 dir2
-                                  (concat (file-short-name dir1)
-                                          " <--> "
-                                          (file-short-name dir2))
-                                  (cdr traverse)
-                                  (car traverse))))
+  (message (concat "Comparing " dir1 " and " dir2 " ..."))
+  (let* ((traverse (ztree-diff-model-traverse dir1 dir2))
+         (model 
+          (ztree-diff-model-create-node dir1 dir2
+                                        (concat (file-short-name dir1)
+                                                " <--> "
+                                                (file-short-name dir2))
+                                        (cdr traverse)
+                                        (car traverse))))
+    (message "Done.")
+    model))
 
   
 (provide 'ztree-diff-model)
