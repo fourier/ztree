@@ -84,6 +84,12 @@ line")
 in order to not to use cl package and lexical-let")
 (make-variable-buffer-local 'ztree-count-subsequent-bs)
 
+(defvar ztree-line-tree-properties nil
+  "Hash with key - line number, value - property ('left, 'right, 'both).
+Used for 2-side trees, to determine if the node exists on left or right
+or both sides")
+(make-variable-buffer-local 'ztree-line-tree-properties)
+
 (defun ztree-tree-header-fun nil
   "Function inserting the header into the tree buffer.
 MUST inster newline at the end!")
@@ -181,7 +187,7 @@ the buffer is split to 2 trees")
   "Search through the array of node-line pairs and return the
 node name for the line specified"
   (let ((found (ztree-find ztree-node-to-line-list
-                           #'(lambda (entry) (eq line (cdr entry))))))
+                           #'(lambda (entry) (= line (cdr entry))))))
     (when found
       (car found))))
 
@@ -303,41 +309,52 @@ apparently shall not be visible"
   (if (atom tree)
       nil
     (let* ((root (car tree))
-          (children (cdr tree))
-          (offset (+ start-offset (* depth 4)))
-          (line-start (+ 3 offset))
-          (line-end-leaf (+ 7 offset))
-          (line-end-node (+ 4 offset)))
+           (children (cdr tree))
+           (offset (+ start-offset (* depth 4)))
+           (line-start (+ 3 offset))
+           (line-end-leaf (+ 7 offset))
+           (line-end-node (+ 4 offset))
+           ;; determine if the line is visible. It is always the case
+           ;; for 1-sided trees; however for 2 sided trees
+           ;; it depends on which side is the actual element
+           ;; and which tree (left with offset 0 or right with offset > 0
+           ;; we are drawing
+           (visible #'(lambda (line) ()
+                        (if (not ztree-node-side-fun) t
+                          (let ((side
+                                 (gethash line ztree-line-tree-properties)))
+                            (cond ((eq side 'left) (= start-offset 0))
+                                  ((eq side 'right) (> start-offset 0))
+                                  (t t)))))))
       (when children
         ;; draw the line to the last child
-        ;; since we push'd children to the list, the last line
-        ;; is the first
-        (let ((last-child (car children))
+        ;; since we push'd children to the list, it's the first visible line
+        ;; from the children list
+        (let ((last-child (ztree-find children
+                                      #'(lambda (x)
+                                          (funcall visible (car-atom x)))))
               (x-offset (+ 2 offset)))
-          (if (atom last-child)
-              (ztree-draw-vertical-line (1+ root) last-child x-offset)
-            (ztree-draw-vertical-line (1+ root) (car last-child) x-offset)))
+          (when last-child
+            (ztree-draw-vertical-line (1+ root)
+                                      (car-atom last-child)
+                                      x-offset)))
         ;; draw recursively
         (dolist (child children)
           (ztree-draw-tree child (1+ depth) start-offset)
-          (if (listp child)
+          (let ((end (if (listp child) line-end-node line-end-leaf)))
+            (when (funcall visible (car-atom child))
               (ztree-draw-horizontal-line line-start
-                                          line-end-node
-                                          (car child))
-            (ztree-draw-horizontal-line line-start
-                                        line-end-leaf
-                                        child)))))))
+                                          end
+                                          (car-atom child)))))))))
 
 (defun ztree-fill-parent-array (tree)
   ;; set the root line
   (let ((root (car tree))
         (children (cdr tree)))
     (dolist (child children)
-      (if (atom child)
-          (ztree-set-parent-for-line child root)
-        (progn 
-          (ztree-set-parent-for-line (car child) root)
-          (ztree-fill-parent-array child))))))
+      (ztree-set-parent-for-line (car-atom child) root)
+      (when (listp child)
+        (ztree-fill-parent-array child)))))
 
 
 (defun ztree-insert-node-contents (path)
@@ -416,7 +433,8 @@ apparently shall not be visible"
           (when (eq side 'right) (setq short-name ""))
           (ztree-insert-single-entry short-name depth expandable expanded 0)
           (ztree-insert-single-entry right-short-name depth expandable expanded
-                                     (1+ (/ width 2))))
+                                     (1+ (/ width 2)))
+          (puthash line side ztree-line-tree-properties))
       (ztree-insert-single-entry short-name depth expandable expanded 0))
       (push (cons node line) ztree-node-to-line-list)    
     (newline)
@@ -434,18 +452,19 @@ apparently shall not be visible"
       (dotimes (i depth)
         (insert " ")
         (insert-char ?\s 3)))           ; insert 3 spaces
-    (if expandable
-        (progn                          
-          (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
-          (insert " ")
+    (when (> (length short-name) 0)
+      (if expandable
+          (progn                          
+            (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
+            (insert " ")
+            (put-text-property 0 (length short-name)
+                               'face 'ztreep-node-face short-name)
+            (insert short-name))
+        (progn
+          (insert "    ")
           (put-text-property 0 (length short-name)
-                             'face 'ztreep-node-face short-name)
-          (insert short-name))
-      (progn
-        (insert "    ")
-        (put-text-property 0 (length short-name)
-                           'face 'ztreep-leaf-face short-name)
-        (insert short-name)))))
+                             'face 'ztreep-leaf-face short-name)
+          (insert short-name))))))
 
 
 (defun ztree-refresh-buffer (&optional line)
@@ -453,6 +472,10 @@ apparently shall not be visible"
   (when (and (equal major-mode 'ztree-mode)
              (boundp 'ztree-start-node))
     (setq ztree-node-to-line-list nil)
+    ;; create a hash table of node properties for line
+    ;; used in 2-side tree mode
+    (when ztree-node-side-fun
+      (setq ztree-line-tree-properties (make-hash-table)))
     (toggle-read-only)
     (erase-buffer)
     (let ((start (point)))

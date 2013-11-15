@@ -50,5 +50,10 @@ Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
  http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (printable-string (file-name-nondirectory (directory-file-name file))))
 
+(defun car-atom (value)
+  "Returns value if value is an atom, otherwise (car value) or nil.
+Used since car-safe returns nil for atoms"
+  (if (atom value) value (car value)))
+
 
 (provide 'ztree-util)
