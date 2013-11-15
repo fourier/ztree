@@ -33,6 +33,22 @@
   "Hidden files regexp. By default all filest starting with dot '.',
 including . and ..")
 
+(defface ztreep-diff-header-face
+  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
+    (((background dark)) (:height 1.2 :foreground "lightblue" :weight bold))
+    (t :height 1.2 :foreground "darkblue" :weight bold))
+  "*Face used for the header in Ztree Diff buffer."
+  :group 'Ztree-diff :group 'font-lock-highlighting-faces)
+(defvar ztreep-diff-header-face 'ztreep-diff-header-face)
+
+(defface ztreep-diff-header-small-face
+  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
+    (((background dark)) (:foreground "lightblue" :weight bold))
+    (t :weight bold :foreground "darkblue"))
+  "*Face used for the header in Ztree Diff buffer."
+  :group 'Ztree-diff :group 'font-lock-highlighting-faces)
+(defvar ztreep-diff-header-small-face 'ztreep-diff-header-small-face)
+
 (defface ztreep-diff-model-diff-face
   '((t                   (:foreground "red")))
   "*Face used for different files in Ztree-diff."
@@ -45,23 +61,39 @@ including . and ..")
   :group 'Ztree-diff :group 'font-lock-highlighting-faces)
 (defvar ztreep-diff-model-add-face 'ztreep-diff-model-add-face)
 
+(defface ztreep-diff-model-normal-face
+  '((t                   (:foreground "#7f7f7f")))
+  "*Face used for non-modified files in Ztree-diff."
+  :group 'Ztree-diff :group 'font-lock-highlighting-faces)
+(defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
+
+
 (defun ztree-diff-model-face (node)
   (let ((diff (ztree-diff-model-differet node)))
     (cond ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
-          (t nil))))
-
+          (t ztreep-diff-model-normal-face))))  
 
 (defun ztree-diff-insert-buffer-header ()
-  (insert "Differences tree")
+  (insert-with-face "Differences tree" ztreep-diff-header-face)
   (newline)
-  (insert "==============")
+  (insert-with-face"Legend:" ztreep-diff-header-small-face)
+  (newline)
+  (insert-with-face " Normal file " ztreep-diff-model-normal-face)
+  (insert-with-face "- same on both sides" ztreep-diff-header-small-face)
+  (newline)
+  (insert-with-face " Orphan file " ztreep-diff-model-add-face)
+  (insert-with-face "- does not exist on other side" ztreep-diff-header-small-face)
+  (newline)
+  (insert-with-face " Mismatch file " ztreep-diff-model-diff-face)
+  (insert-with-face "- different from other side" ztreep-diff-header-small-face)
+  (newline)
+  (insert-with-face "==============" ztreep-diff-header-face)
   (newline))
-
 
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
-  (interactive "DLeft directory \nDRight directory")
+  (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
          (buf-name (concat "*" (ztree-diff-model-short-name difference) "*")))
     (ztree-view buf-name

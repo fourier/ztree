@@ -62,13 +62,28 @@ including . and ..")
 
 
 ;;
+;; Faces
+;;
+
+(defface ztreep-header-face
+  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
+    (((background dark)) (:height 1.2 :foreground "lightblue" :weight bold))
+    (t :height 1.2 :foreground "darkblue" :weight bold))
+  "*Face used for the header in Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-header-face 'ztreep-header-face)
+
+
+;;
 ;; File bindings to the directory tree control
 ;;
 
 (defun ztree-insert-buffer-header ()
-  (insert "Directory tree")
-  (newline)
-  (insert "==============")
+  (let ((start (point)))
+    (insert "Directory tree")
+    (newline)
+    (insert "==============")
+    (set-text-properties start (point) '(face ztreep-header-face)))
   (newline))
 
 (defun ztree (path)

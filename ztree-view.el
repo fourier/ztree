@@ -140,14 +140,6 @@ the buffer is split to 2 trees")
     map)
   "Keymap for `ztree-mode'.")
 
-(defface ztreep-header-face
-  '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
-    (((background dark)) (:height 1.2 :foreground "lightblue" :weight bold))
-    (t :height 1.2 :foreground "darkblue" :weight bold))
-  "*Face used for the header in Ztree buffer."
-  :group 'Ztree :group 'font-lock-highlighting-faces)
-(defvar ztreep-header-face 'ztreep-header-face)
-
 
 (defface ztreep-node-face
   '((((background dark)) (:foreground "#ffffff"))
@@ -490,9 +482,7 @@ apparently shall not be visible"
       (setq ztree-line-tree-properties (make-hash-table)))
     (toggle-read-only)
     (erase-buffer)
-    (let ((start (point)))
-      (funcall ztree-tree-header-fun)
-      (set-text-properties start (point) '(face ztreep-header-face)))
+    (funcall ztree-tree-header-fun)
     (setq ztree-start-line (line-number-at-pos (point)))
     (ztree-insert-node-contents ztree-start-node)
     (scroll-to-line (if line line ztree-start-line))

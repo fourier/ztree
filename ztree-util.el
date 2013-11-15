@@ -56,4 +56,11 @@ Used since car-safe returns nil for atoms"
   (if (atom value) value (car value)))
 
 
+(defun insert-with-face (text face)
+  "Insert text with the face provided"
+  (let ((start (point)))
+    (insert text)
+    (put-text-property start (point) 'face face)))
+
+
 (provide 'ztree-util)
