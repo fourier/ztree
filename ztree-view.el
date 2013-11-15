@@ -256,13 +256,17 @@ if previous key was Backspace - close the node"
 (defun ztree-get-splitted-node-contens (path)
   "Returns pair of 2 elements: list of expandable nodes and
 list of leafs"
-  (let ((nodes (funcall ztree-node-contents-fun path)))
-    (cons (ztree-filter
-           #'(lambda (f) (funcall ztree-node-is-expandable-fun f))
-           nodes)
-          (ztree-filter
-           #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f)))
-           nodes))))
+  (let ((nodes (funcall ztree-node-contents-fun path))
+        (comp  #'(lambda (x y)
+                 (string< (funcall ztree-node-short-name-fun x)
+                          (funcall ztree-node-short-name-fun y)))))
+    (cons (sort (ztree-filter
+                 #'(lambda (f) (funcall ztree-node-is-expandable-fun f))
+                 nodes) comp)
+          (sort (ztree-filter
+                 #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f)))
+                 nodes) comp))))
+                
 
 (defun ztree-node-is-in-filter-list (node)
   "Determine if the node is in filter list (and therefore
