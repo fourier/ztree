@@ -33,6 +33,25 @@
   "Hidden files regexp. By default all filest starting with dot '.',
 including . and ..")
 
+(defface ztreep-diff-model-diff-face
+  '((t                   (:foreground "red")))
+  "*Face used for different files in Ztree-diff."
+  :group 'Ztree-diff :group 'font-lock-highlighting-faces)
+(defvar ztreep-diff-model-diff-face 'ztreep-diff-model-diff-face)
+
+(defface ztreep-diff-model-add-face
+  '((t                   (:foreground "blue")))
+  "*Face used for added files in Ztree-diff."
+  :group 'Ztree-diff :group 'font-lock-highlighting-faces)
+(defvar ztreep-diff-model-add-face 'ztreep-diff-model-add-face)
+
+(defun ztree-diff-model-face (node)
+  (let ((diff (ztree-diff-model-differet node)))
+    (cond ((eq diff 'diff) ztreep-diff-model-diff-face)
+          ((eq diff 'new)  ztreep-diff-model-add-face)
+          (t nil))))
+
+
 (defun ztree-diff-insert-buffer-header ()
   (insert "Differences tree")
   (newline)
@@ -53,6 +72,7 @@ including . and ..")
                 'ztree-diff-model-is-directory
                 'equal
                 'ztree-diff-model-children
+                'ztree-diff-model-face
                 'ztree-diff-model-side)))
 
 

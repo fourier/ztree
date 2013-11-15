@@ -119,6 +119,10 @@ If not defined(by default) - using single screen tree, otherwise
 the buffer is split to 2 trees")
 (make-variable-buffer-local 'ztree-node-side-fun)
 
+(defun ztree-node-face-fun nil
+  "Function returning face for the node")
+(make-variable-buffer-local 'ztree-node-face-fun)
+
 
 ;;
 ;; Major mode definitions
@@ -163,14 +167,14 @@ the buffer is split to 2 trees")
 
 (defface ztreep-arrow-face
   '((((background dark)) (:foreground "#7f7f7f"))
-    (t                   (:inherit 'font-lock-comment-face)))
+    (t                   (:foreground "#8d8d8d")))
   "*Face used for arrows in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-arrow-face 'ztreep-arrow-face)
 
 (defface ztreep-expand-sign-face
   '((((background dark)) (:foreground "#7f7fff"))
-    (t                   (:inherit 'font-lock-comment-face)))
+    (t                   (:foreground "#8d8d8d")))
   "*Face used for expand sign [+] in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-expand-sign-face 'ztreep-expand-sign-face)
@@ -431,16 +435,24 @@ apparently shall not be visible"
               (width (window-width)))
           (when (eq side 'left)  (setq right-short-name ""))
           (when (eq side 'right) (setq short-name ""))
-          (ztree-insert-single-entry short-name depth expandable expanded 0)
-          (ztree-insert-single-entry right-short-name depth expandable expanded
-                                     (1+ (/ width 2)))
+          (ztree-insert-single-entry short-name depth
+                                     expandable expanded 0
+                                     (when ztree-node-face-fun
+                                       (funcall ztree-node-face-fun node)))
+          (ztree-insert-single-entry right-short-name depth
+                                     expandable expanded (1+ (/ width 2))
+                                     (when ztree-node-face-fun
+                                       (funcall ztree-node-face-fun node)))
           (puthash line side ztree-line-tree-properties))
       (ztree-insert-single-entry short-name depth expandable expanded 0))
       (push (cons node line) ztree-node-to-line-list)    
     (newline)
     line))
 
-(defun ztree-insert-single-entry (short-name depth expandable expanded offset)
+(defun ztree-insert-single-entry (short-name depth
+                                             expandable expanded
+                                             offset
+                                             &optional face)
   (let ((node-sign #'(lambda (exp)    
                        (insert "[" (if exp "-" "+") "]")
                        (set-text-properties (- (point) 3)
@@ -458,12 +470,12 @@ apparently shall not be visible"
             (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
             (insert " ")
             (put-text-property 0 (length short-name)
-                               'face 'ztreep-node-face short-name)
+                               'face (if face face 'ztreep-node-face) short-name)
             (insert short-name))
         (progn
           (insert "    ")
           (put-text-property 0 (length short-name)
-                             'face 'ztreep-leaf-face short-name)
+                             'face (if face face 'ztreep-leaf-face) short-name)
           (insert short-name))))))
 
 
@@ -496,6 +508,7 @@ apparently shall not be visible"
                    expandable-p
                    equal-fun
                    children-fun
+                   face-fun
                    &optional node-side-fun
                    )
   (let ((buf (get-buffer-create buffer-name)))
@@ -510,6 +523,7 @@ apparently shall not be visible"
     (setq ztree-node-is-expandable-fun expandable-p)
     (setq ztree-node-equal-fun equal-fun)
     (setq ztree-node-contents-fun children-fun)
+    (setq ztree-node-face-fun face-fun)
     (setq ztree-node-side-fun node-side-fun)
     (ztree-refresh-buffer)))
 

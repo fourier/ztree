@@ -83,7 +83,8 @@ including . and ..")
                   'file-short-name
                   'file-directory-p
                   'string-equal
-                  '(lambda (x) (directory-files x 'full))))))
+                  '(lambda (x) (directory-files x 'full))
+                  nil))))
 
 
 (provide 'ztree)
