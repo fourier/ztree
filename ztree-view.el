@@ -269,7 +269,7 @@ list of leafs"
 apparently shall not be visible"
   (ztree-find ztree-filter-list #'(lambda (rx) (string-match rx node))))
 
-(defun ztree-draw-char (c x y)
+(defun ztree-draw-char (c x y &optional face)
   "Draw char c at the position (1-based) (x y)"
   (save-excursion
     (scroll-to-line y)
@@ -277,14 +277,14 @@ apparently shall not be visible"
     (goto-char (+ x (-(point) 1)))
     (delete-char 1)
     (insert-char c 1)
-    (set-text-properties (1- (point)) (point) '(face ztreep-arrow-face))))
+    (put-text-property (1- (point)) (point) 'face (if face face 'ztreep-arrow-face))))
 
-(defun ztree-draw-vertical-line (y1 y2 x)
+(defun ztree-draw-vertical-line (y1 y2 x &optional face)
   (if (> y1 y2)
       (dotimes (y (1+ (- y1 y2)))
-        (ztree-draw-char ?\| x (+ y2 y)))
+        (ztree-draw-char ?\| x (+ y2 y) face))
     (dotimes (y (1+ (- y2 y1)))
-      (ztree-draw-char ?\| x (+ y1 y)))))
+      (ztree-draw-char ?\| x (+ y1 y) face))))
 
 (defun ztree-draw-horizontal-line (x1 x2 y)
   (if (> x1 x2)
@@ -361,7 +361,8 @@ apparently shall not be visible"
           ;; draw the vertical line in the middle of the window
           (ztree-draw-vertical-line ztree-start-line
                                     (1- (+ num-of-items ztree-start-line))
-                                    (/ width 2))
+                                    (/ width 2)
+                                    'vertical-border)
           (ztree-draw-tree tree 0 (/ width 2))))))
 
 
