@@ -68,11 +68,10 @@ including . and ..")
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
 
 
-(defvar ztreediff-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C") 'ztree-diff-copy)
-    map)
-  "Keymap for `ztreediff-mode'.")
+(defvar ztreediff-dirs-pair nil
+  "Pair of the directories stored. Used to perform the full rescan")
+(make-variable-buffer-local 'ztrediff-dirs-par)
+
 
 ;;;###autoload
 (define-minor-mode ztreediff-mode
@@ -83,8 +82,8 @@ including . and ..")
   " Diff"
   ;; The minor mode keymap
   `(
-    (,(kbd "C") . ztree-diff-copy)))
-
+    (,(kbd "C") . ztree-diff-copy)
+    ([f5] . ztree-diff-full-rescan)))
 
 
 (defun ztree-diff-node-face (node)
@@ -110,6 +109,13 @@ including . and ..")
   (insert-with-face "==============" ztreep-diff-header-face)
   (newline))
 
+(defun ztree-diff-full-rescan ()
+  (interactive)
+  (when (and ztreediff-dirs-pair
+             (yes-or-no-p (format "Force full rescan?")))
+    (ztree-diff (car ztreediff-dirs-pair) (cdr ztreediff-dirs-pair))))
+
+
 (defun ztree-diff-node-action (node)
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
@@ -126,15 +132,24 @@ including . and ..")
 
 (defun ztree-diff-copy ()
   (interactive)
-  (let ((node (ztree-find-node-in-line (line-number-at-pos))))
-    (when node
-      (message (ztree-diff-node-short-name node)))))
+  (let ((found (ztree-find-node-at-point)))
+    (when found
+      (let ((side (cdr found))
+            (node-side (ztree-diff-node-side node)))
+        ))))
+        ;; determine a side to copy from/to
+        ;; (eq node-side 'both)
+        ;;           (eq node-side side))
+
+        ;;     (parent (ztree-diff-node-parent node)))
+        ;; (when 
 
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
          (buf-name (concat "*" (ztree-diff-node-short-name difference) "*")))
+    (setq ztreediff-dirs-pair (cons dir1 dir2))
     (ztree-view buf-name
                 difference
                 (list ztree-diff-hidden-files-regexp)

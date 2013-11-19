@@ -137,6 +137,7 @@ the buffer is split to 2 trees")
     (define-key map (kbd "\r") 'ztree-perform-action)
     (define-key map (kbd "SPC") 'ztree-perform-action)
     (define-key map [double-mouse-1] 'ztree-perform-action)
+    (define-key map (kbd "TAB") 'ztree-jump-side)
     (define-key map (kbd "g") 'ztree-refresh-buffer)
     (if window-system
         (define-key map (kbd "<backspace>") 'ztree-move-up-in-tree)
@@ -187,6 +188,15 @@ the buffer is split to 2 trees")
   "Search through the array of node-line pairs and return the
 node for the line specified"
   (gethash line ztree-line-to-node-table))
+
+(defun ztree-find-node-at-point ()
+  "Returns cons pair (node, side) for the current point or nil
+if there is no node"
+  (let ((center (/ (window-width) 2))
+        (node (ztree-find-node-in-line (line-number-at-pos))))
+    (when node
+      (cons node (if (> (current-column) center) 'left 'right)))))
+  
 
 (defun ztree-is-expanded-node (node)
   "Find if the node is in the list of expanded nodes"
@@ -471,6 +481,17 @@ apparently shall not be visible"
           (put-text-property 0 (length short-name)
                              'face (if face face 'ztreep-leaf-face) short-name)
           (insert short-name))))))
+
+(defun ztree-jump-side ()
+  (interactive)
+  (when ztree-node-side-fun             ; 2-sided tree
+    (let ((center (/ (window-width) 2)))
+      (cond ((< (current-column) center) 
+             (move-to-column (1+ center)))
+            ((> (current-column) center) 
+             (move-to-column 1))
+            (t nil)))))
+
 
 
 (defun ztree-refresh-buffer (&optional line)
