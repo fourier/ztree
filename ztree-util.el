@@ -63,4 +63,61 @@ Used since car-safe returns nil for atoms"
     (put-text-property start (point) 'face face)))
 
 
+(defmacro defrecord (record-name record-fields)
+  "Create a record (structure) and getters/setters.
+
+Record is the following set of functions:
+ - Record constructor with name \"record-name\"-create and list of
+arguments which will be assigned to record-fields
+ - Record getters with names \"record-name\"-\"field\" accepting one
+argument - the record; \"field\" is from \"record-fields\" symbols
+ - Record setters with names \"record-name\"-set-\"field\" accepting two
+arguments - the record and the field value
+
+Example:
+`(defrecord person (name age))`
+
+will be expanded to the following functions:
+
+`(defun person-create (name age) (...)`
+`(defun person-name (record) (...)`
+`(defun person-age (record) (...)`
+`(defun person-set-name (record value) (...)`
+`(defun person-set-age (record value) (...)`"
+  (let ((ctor-name (intern (concat (symbol-name record-name) "-create")))
+        (rec-var (make-symbol "record")))
+    `(progn
+       ;; constructor with the name "record-name-create"
+       ;; with arguments list "record-fields" expanded
+       (defun ,ctor-name (,@record-fields)
+         (let ((,rec-var))
+           ,@(mapcar #'(lambda (x) 
+                      (list 'setq rec-var (list 'plist-put rec-var (list 'quote x) x)))
+                    record-fields)))
+       ;; getters with names "record-name-field" where the "field"
+       ;; is from record-fields
+       ,@(mapcar #'(lambda (x)
+                    (let ((getter-name (intern (concat (symbol-name record-name)
+                                                       "-"
+                                                       (symbol-name x)))))
+                      `(progn
+                         (defun ,getter-name (,rec-var)
+                           (plist-get ,rec-var ',x)
+                           ))))
+                record-fields)
+       ;; setters wit names "record-name-set-field where the "field"
+       ;; is from record-fields
+       ;; arguments for setters: (record value)
+       ,@(mapcar #'(lambda (x)
+                     (let ((setter-name (intern (concat (symbol-name record-name)
+                                                        "-set-"
+                                                        (symbol-name x)))))
+                       `(progn
+                          (defun ,setter-name (,rec-var value)
+                            (plist-put ,rec-var ',x value)
+                            ))))
+                 record-fields))))
+
+
+
 (provide 'ztree-util)

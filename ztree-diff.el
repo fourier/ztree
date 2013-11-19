@@ -68,8 +68,8 @@ including . and ..")
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
 
 
-(defun ztree-diff-model-face (node)
-  (let ((diff (ztree-diff-model-differet node)))
+(defun ztree-diff-node-face (node)
+  (let ((diff (ztree-diff-node-different node)))
     (cond ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
           (t ztreep-diff-model-normal-face))))  
@@ -91,9 +91,9 @@ including . and ..")
   (insert-with-face "==============" ztreep-diff-header-face)
   (newline))
 
-(defun ztree-diff-model-action (node)
-  (let ((left (ztree-diff-model-get-left-path node))
-        (right (ztree-diff-model-get-right-path node)))
+(defun ztree-diff-node-action (node)
+  (let ((left (ztree-diff-node-left-path node))
+        (right (ztree-diff-node-right-path node)))
     (when (and left right)
       (ediff left right))))
 
@@ -101,18 +101,18 @@ including . and ..")
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
-         (buf-name (concat "*" (ztree-diff-model-short-name difference) "*")))
+         (buf-name (concat "*" (ztree-diff-node-short-name difference) "*")))
     (ztree-view buf-name
                 difference
                 (list ztree-diff-hidden-files-regexp)
                 'ztree-diff-insert-buffer-header
-                'ztree-diff-model-short-name
-                'ztree-diff-model-is-directory
+                'ztree-diff-node-short-name
+                'ztree-diff-node-is-directory
                 'equal
-                'ztree-diff-model-children
-                'ztree-diff-model-face
-                'ztree-diff-model-action
-                'ztree-diff-model-side)))
+                'ztree-diff-node-children
+                'ztree-diff-node-face
+                'ztree-diff-node-action
+                'ztree-diff-node-side)))
 
 
 (provide 'ztree-diff)

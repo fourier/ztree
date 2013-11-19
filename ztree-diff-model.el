@@ -12,55 +12,28 @@
     (setq ztree-diff-model-wait-message (concat ztree-diff-model-wait-message "."))
     (message ztree-diff-model-wait-message)))
 
-;; different = {nil, 'new, 'diff}
-(defun ztree-diff-model-create-node (left-full-path right-full-path short-name children different)
-  (let (node)
-    (setq node (plist-put node 'left left-full-path))
-    (setq node (plist-put node 'right right-full-path))
-    (setq node (plist-put node 'short short-name))
-    (setq node (plist-put node 'children children))
-    (setq node (plist-put node 'different different))))
-
-;; Getters
-
-(defun ztree-diff-model-get-left-path (node)
-  (plist-get node 'left))
-
-(defun ztree-diff-model-get-right-path (node)
-  (plist-get node 'right))
-
-(defun ztree-diff-model-short-name (node)
-    (plist-get node 'short))
-
-(defun ztree-diff-model-children (node)
-    (plist-get node 'children))
-
-(defun ztree-diff-model-differet (node)
-    (plist-get node 'different))
-
-;; Setters
-
-(defun ztree-diff-model-set-parent (node)
-  (plist-put node 'parent parent))
-
-(defun ztree-diff-model-set-children (node children)
-  (plist-put node 'children children))
-
-(defun ztree-diff-model-set-different (node different)
-  (plist-put node 'different different))
 
 
-(defun ztree-diff-model-is-directory (node)
-  (let ((left  (plist-get node 'left))
-        (right (plist-get node 'right)))
+;; Create a record ztree-diff-node with defined fielsd and getters/setters
+;; here left-path is the full path on the left side of the diff window,
+;; right-path is the full path of the right side,
+;; short-name - is the file or directory name
+;; children - list of nodes - files or directories if the node is a directory
+;; different = {nil, 'new, 'diff} - means comparison status
+(defrecord ztree-diff-node (left-path right-path short-name children different))
+
+
+(defun ztree-diff-node-is-directory (node)
+  (let ((left (ztree-diff-node-left-path node))
+        (right (ztree-diff-node-right-path node)))
     (if left
         (file-directory-p left)
       (file-directory-p right))))
 
-(defun ztree-diff-model-side (node)
-  (let ((left  (plist-get node 'left))
-        (right (plist-get node 'right)))
-  (if (and left right) 'both
+(defun ztree-diff-node-side (node)
+ (let ((left (ztree-diff-node-left-path node))
+        (right (ztree-diff-node-right-path node)))
+   (if (and left right) 'both
     (if left 'left 'right))))
 
 (defun ztree-diff-model-files-equal (file1 file2)
@@ -82,14 +55,14 @@
         (result nil))
     (dolist (file files)
       (if (file-directory-p file)
-          (push (ztree-diff-model-create-node
+          (push (ztree-diff-node-create
                  (when (eq side 'left) file)
                  (when (eq side 'right) file)
                  (file-short-name file)
                  (ztree-diff-model-subtree file side)
                  'new)
                 result)
-        (push (ztree-diff-model-create-node
+        (push (ztree-diff-node-create
                (when (eq side 'left) file)
                (when (eq side 'right) file)
                (file-short-name file)
@@ -107,7 +80,7 @@
         old)
     old))
 
-(defun ztree-diff-model-traverse (parent path1 path2)
+(defun ztree-diff-node-traverse (parent path1 path2)
   "Function traversing 2 paths returning the list where the
 first element is the difference status (nil, 'diff, 'new') and
 the rest is the combined list of nodes"
@@ -145,7 +118,7 @@ the rest is the combined list of nodes"
               (setq different (if (ztree-diff-model-files-equal file1 file2) nil 'diff))
             ;; 3.2 if it is the directory
             ;; 3.2.1 get the result of the directories comparison together with status
-            (let ((traverse (ztree-diff-model-traverse parent file1 file2)))
+            (let ((traverse (ztree-diff-node-traverse parent file1 file2)))
               ;; 3.2.2 update the difference status for whole comparison from
               ;;       difference result from the 2 subdirectories comparison
               (setq different (car traverse))
@@ -153,7 +126,7 @@ the rest is the combined list of nodes"
               (setq children (cdr traverse)))))
         ;; 2.3 update difference status for the whole comparison
         (setq different-dir (ztree-diff-model-update-diff different-dir different))
-        (let ((node (ztree-diff-model-create-node file1 file2 simple-name children different)))
+        (let ((node (ztree-diff-node-create file1 file2 simple-name children different)))
           ;; push the created node to the result list
           (push node result))))
     ;; second - adding entries from the right directory which are not present
@@ -178,7 +151,7 @@ the rest is the combined list of nodes"
           ;; update the different status for the whole comparison
           (setq different-dir (ztree-diff-model-update-diff different-dir 'new))
           ;; push the created node to the result list
-          (push (ztree-diff-model-create-node file1 file2 simple-name children 'new)
+          (push (ztree-diff-node-create file1 file2 simple-name children 'new)
                 result))))
     (cons different-dir result)))
 
@@ -189,22 +162,18 @@ the rest is the combined list of nodes"
     (error "Path %s is not a directory" dir2))
   (setq ztree-diff-model-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
   (let* ((model 
-          (ztree-diff-model-create-node dir1 dir2
-                                        (concat (file-short-name dir1)
-                                                " <--> "
-                                                (file-short-name dir2))
-                                        nil
-                                        nil))
-         (traverse (ztree-diff-model-traverse model dir1 dir2)))
-    (ztree-diff-model-set-children model (cdr traverse))
+          (ztree-diff-node-create dir1 dir2
+                                   (concat (file-short-name dir1)
+                                           " <--> "
+                                           (file-short-name dir2))
+                                   nil
+                                   nil))
+         (traverse (ztree-diff-node-traverse model dir1 dir2)))
+    (ztree-diff-node-set-children model (cdr traverse))
     (print model)
-    (ztree-diff-model-set-different model (car traverse))
+    (ztree-diff-node-set-different model (car traverse))
     (message "Done.")
     model))
 
   
 (provide 'ztree-diff-model)
-
-                              
-        
-
