@@ -43,12 +43,14 @@
 
 
 ;; Create a record ztree-diff-node with defined fielsd and getters/setters
-;; here left-path is the full path on the left side of the diff window,
+;; here:
+;; parent - parent node
+;; left-path is the full path on the left side of the diff window,
 ;; right-path is the full path of the right side,
 ;; short-name - is the file or directory name
 ;; children - list of nodes - files or directories if the node is a directory
 ;; different = {nil, 'new, 'diff} - means comparison status
-(defrecord ztree-diff-node (left-path right-path short-name children different))
+(defrecord ztree-diff-node (parent left-path right-path short-name children different))
 
 
 (defun ztree-diff-node-is-directory (node)
@@ -59,10 +61,10 @@
       (file-directory-p right))))
 
 (defun ztree-diff-node-side (node)
- (let ((left (ztree-diff-node-left-path node))
+  (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
-   (if (and left right) 'both
-    (if left 'left 'right))))
+    (if (and left right) 'both
+      (if left 'left 'right))))
 
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files using external diff. Returns t if equal"
@@ -77,20 +79,24 @@
                                             (string-equal simple-name "..")))))
                 (directory-files dir 'full)))
 
-(defun ztree-diff-model-subtree (path side)
+(defun ztree-diff-model-subtree (parent path side)
   "Creates a subtree for the given path for either 'left or 'right sides"
   (let ((files (ztree-directory-files path))
         (result nil))
     (dolist (file files)
       (if (file-directory-p file)
-          (push (ztree-diff-node-create
-                 (when (eq side 'left) file)
-                 (when (eq side 'right) file)
-                 (file-short-name file)
-                 (ztree-diff-model-subtree file side)
-                 'new)
-                result)
+          (let* ((node (ztree-diff-node-create
+                        parent
+                        (when (eq side 'left) file)
+                        (when (eq side 'right) file)
+                        (file-short-name file)
+                        nil
+                        'new))
+                 (children (ztree-diff-model-subtree node file side)))
+            (ztree-diff-node-set-children node children)
+            (push node result))
         (push (ztree-diff-node-create
+               parent
                (when (eq side 'left) file)
                (when (eq side 'right) file)
                (file-short-name file)
@@ -125,6 +131,9 @@ the rest is the combined list of nodes"
              (isdir (file-directory-p file1))
              (children nil)
              (different nil)
+             ;; create the current node to be set as parent to
+             ;; subdirectories
+             (node (ztree-diff-node-create parent file1 nil simple-name nil nil))
              ;; 1. find if the file is in the second directory and the type
              ;;    is the same - i.e. both are directories or both are files
              (file2 (ztree-find list2
@@ -136,7 +145,7 @@ the rest is the combined list of nodes"
             (progn
               ;; 2.1 if it is a directory, add the whole subtree
               (when (file-directory-p file1)
-                (setq children (ztree-diff-model-subtree file1 'left)))
+                (setq children (ztree-diff-model-subtree node file1 'left)))
               ;; 2.2 update the difference status for this entry
               (setq different 'new))
           ;; 3. if it is found in second directory and of the same type
@@ -146,7 +155,7 @@ the rest is the combined list of nodes"
               (setq different (if (ztree-diff-model-files-equal file1 file2) nil 'diff))
             ;; 3.2 if it is the directory
             ;; 3.2.1 get the result of the directories comparison together with status
-            (let ((traverse (ztree-diff-node-traverse parent file1 file2)))
+            (let ((traverse (ztree-diff-node-traverse node file1 file2)))
               ;; 3.2.2 update the difference status for whole comparison from
               ;;       difference result from the 2 subdirectories comparison
               (setq different (car traverse))
@@ -154,9 +163,12 @@ the rest is the combined list of nodes"
               (setq children (cdr traverse)))))
         ;; 2.3 update difference status for the whole comparison
         (setq different-dir (ztree-diff-model-update-diff different-dir different))
-        (let ((node (ztree-diff-node-create file1 file2 simple-name children different)))
-          ;; push the created node to the result list
-          (push node result))))
+        ;; update calculated parameters of the node
+        (ztree-diff-node-set-right-path node file2)
+        (ztree-diff-node-set-children node children)
+        (ztree-diff-node-set-different node different)
+        ;; push the created node to the result list
+        (push node result)))
     ;; second - adding entries from the right directory which are not present
     ;; in the left directory
     (dolist (file2 list2)
@@ -165,6 +177,8 @@ the rest is the combined list of nodes"
       (let* ((simple-name (file-short-name file2))
              (isdir (file-directory-p file2))
              (children nil)
+             ;; create the node to be added to the results list
+             (node (ztree-diff-node-create parent nil file2 simple-name nil 'new))
              ;; 1. find if the file is in the first directory and the type
              ;;    is the same - i.e. both are directories or both are files
              (file1 (ztree-find list1
@@ -175,12 +189,14 @@ the rest is the combined list of nodes"
         (when (not file1)
           ;; if it is a directory, set the whole subtree to children
           (when (file-directory-p file2)
-            (setq children (ztree-diff-model-subtree file2 'right)))
+            (setq children (ztree-diff-model-subtree node file2 'right)))
           ;; update the different status for the whole comparison
           (setq different-dir (ztree-diff-model-update-diff different-dir 'new))
+          ;; set calculated children to the node
+          (ztree-diff-node-set-children node children)
           ;; push the created node to the result list
-          (push (ztree-diff-node-create file1 file2 simple-name children 'new)
-                result))))
+          (push node result))))
+    ;; result is a pair: difference status and nodes list
     (cons different-dir result)))
 
 (defun ztree-diff-model-create (dir1 dir2)
@@ -190,18 +206,17 @@ the rest is the combined list of nodes"
     (error "Path %s is not a directory" dir2))
   (setq ztree-diff-model-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
   (let* ((model 
-          (ztree-diff-node-create dir1 dir2
-                                   (concat (file-short-name dir1)
-                                           " <--> "
-                                           (file-short-name dir2))
-                                   nil
-                                   nil))
+          (ztree-diff-node-create nil dir1 dir2
+                                  (concat (file-short-name dir1)
+                                          " <--> "
+                                          (file-short-name dir2))
+                                  nil
+                                  nil))
          (traverse (ztree-diff-node-traverse model dir1 dir2)))
     (ztree-diff-node-set-children model (cdr traverse))
-    (print model)
     (ztree-diff-node-set-different model (car traverse))
     (message "Done.")
     model))
 
-  
+
 (provide 'ztree-diff-model)

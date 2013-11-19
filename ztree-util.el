@@ -114,10 +114,9 @@ will be expanded to the following functions:
                                                         (symbol-name x)))))
                        `(progn
                           (defun ,setter-name (,rec-var value)
-                            (plist-put ,rec-var ',x value)
+                            (setq ,rec-var (plist-put ,rec-var ',x value))
                             ))))
                  record-fields))))
-
 
 
 (provide 'ztree-util)

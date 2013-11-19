@@ -68,6 +68,25 @@ including . and ..")
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
 
 
+(defvar ztreediff-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C") 'ztree-diff-copy)
+    map)
+  "Keymap for `ztreediff-mode'.")
+
+;;;###autoload
+(define-minor-mode ztreediff-mode
+  "A minor mode for displaying the difference of the directory trees in text mode."
+  ;; initial value
+  nil
+  ;; modeline name
+  " Diff"
+  ;; The minor mode keymap
+  `(
+    (,(kbd "C") . ztree-diff-copy)))
+
+
+
 (defun ztree-diff-node-face (node)
   (let ((diff (ztree-diff-node-different node)))
     (cond ((eq diff 'diff) ztreep-diff-model-diff-face)
@@ -95,7 +114,21 @@ including . and ..")
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
     (when (and left right)
-      (ediff left right))))
+      (if (not (ztree-diff-node-different node))
+          (message (concat "Files "
+                           (ztree-diff-node-short-name node)
+                           " on left and right side are identical"))
+      (ediff left right)))))
+
+  ;; (let ((parent (ztree-diff-node-parent node)))
+  ;;   (when parent
+  ;;     (message (ztree-diff-node-short-name parent)))))
+
+(defun ztree-diff-copy ()
+  (interactive)
+  (let ((node (ztree-find-node-in-line (line-number-at-pos))))
+    (when node
+      (message (ztree-diff-node-short-name node)))))
 
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
@@ -112,7 +145,8 @@ including . and ..")
                 'ztree-diff-node-children
                 'ztree-diff-node-face
                 'ztree-diff-node-action
-                'ztree-diff-node-side)))
+                'ztree-diff-node-side)
+    (ztreediff-mode)))
 
 
 (provide 'ztree-diff)

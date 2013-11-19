@@ -507,7 +507,7 @@ apparently shall not be visible"
   (let ((buf (get-buffer-create buffer-name)))
     (switch-to-buffer buf)
     (ztree-mode)
-    ;; configure ztree to work with directories
+    ;; configure ztree-view
     (setq ztree-start-node start-node)
     (setq ztree-expanded-nodes-list (list ztree-start-node))
     (setq ztree-filter-list filter-list)
