@@ -2,6 +2,16 @@
 
 (require 'ztree-util)
 
+(defvar ztree-diff-model-wait-message nil
+  "Message showing while constructing the diff tree")
+(make-variable-buffer-local 'ztree-diff-model-wait-message)
+
+
+(defun ztree-diff-model-update-wait-message ()
+  (when ztree-diff-model-wait-message
+    (setq ztree-diff-model-wait-message (concat ztree-diff-model-wait-message "."))
+    (message ztree-diff-model-wait-message)))
+
 ;; different = {nil, 'new, 'diff}
 (defun ztree-diff-model-create-node (left-full-path right-full-path short-name children different)
   (let (node)
@@ -105,6 +115,7 @@ the rest is the combined list of nodes"
         (list2 (ztree-directory-files path2))
         (different-dir nil)
         (result nil))
+    (ztree-diff-model-update-wait-message)
     ;; first - adding all entries from left directory
     (dolist (file1 list1)
       ;; for every entry in the first directory 
@@ -176,7 +187,7 @@ the rest is the combined list of nodes"
     (error "Path %s is not a directory" dir1))
   (when (not (file-directory-p dir2))
     (error "Path %s is not a directory" dir2))
-  (message (concat "Comparing " dir1 " and " dir2 " ..."))
+  (setq ztree-diff-model-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
   (let* ((model 
           (ztree-diff-model-create-node dir1 dir2
                                         (concat (file-short-name dir1)
