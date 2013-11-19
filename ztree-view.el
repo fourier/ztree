@@ -195,7 +195,7 @@ if there is no node"
   (let ((center (/ (window-width) 2))
         (node (ztree-find-node-in-line (line-number-at-pos))))
     (when node
-      (cons node (if (> (current-column) center) 'left 'right)))))
+      (cons node (if (> (current-column) center) 'right 'left)))))
   
 
 (defun ztree-is-expanded-node (node)

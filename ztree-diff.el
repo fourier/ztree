@@ -134,16 +134,41 @@ including . and ..")
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
-      (let ((side (cdr found))
-            (node-side (ztree-diff-node-side node)))
-        ))))
-        ;; determine a side to copy from/to
-        ;; (eq node-side 'both)
-        ;;           (eq node-side side))
+      (let* ((node (car found))
+             (side (cdr found))
+             (node-side (ztree-diff-node-side node))
+             (copy-to-right t)           ; copy from left to right
+             (node-left (ztree-diff-node-left-path node))
+             (node-right (ztree-diff-node-right-path node))
+             (source-path nil)
+             (destination-path nil)
+             (parent (ztree-diff-node-parent node)))
+        (when parent
+          ;; determine a side to copy from/to
+          ;; algorithm:
+          ;; 1) if both side are present, use the side
+          ;;    variable
+          (setq copy-to-right (if (eq node-side 'both)
+                                  (eq side 'left)
+                                ;; 2) if one of sides is absent, copy from
+                                ;;    the side where the file is present
+                                (eq node-side 'left)))
+          ;; 3) in both cases determine if the destination
+          ;;    directory is in place
+          (setq source-path (if copy-to-right node-left node-right)
+                destination-path (if copy-to-right
+                                     (ztree-diff-node-right-path parent)
+                                   (ztree-diff-node-left-path parent)))
+          (when (and source-path destination-path
+                     (yes-or-no-p (format "Copy [%s]%s to [%s]%s/ ?"
+                                          (if copy-to-right "LEFT" "RIGHT")
+                                          (ztree-diff-node-short-name node)
+                                          (if copy-to-right "RIGHT" "LEFT")
+                                          destination-path)))
+            nil                         ; do copy
+            ))))))
 
-        ;;     (parent (ztree-diff-node-parent node)))
-        ;; (when 
-
+          
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
