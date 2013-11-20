@@ -1,11 +1,11 @@
 ztree
 =====
 
-Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: `ztree-dir` and `ztree-diff.
+Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: **ztree-dir** and **ztree-diff**.
 
 ztree-dir
 ---------
-`ztree-dir` is a simple text-mode directory tree for Emacs. See screenshots below for GUI and the terminal versions of the zterm.
+**ztree-dir** is a simple text-mode directory tree for Emacs. See screenshots below for the GUI and the terminal versions of the **ztree-dir**.
 
 Add the following to your .emacs file:
 
@@ -29,9 +29,11 @@ Open/close directories with double-click, `RET` or `Space` keys. To jump to the 
 
 ztree-diff
 ==========
-`ztree-diff` is a directory-diff tool for Emacs inspired by commercial tools like Beyond Compare or Araxis Merge. It supports showing the difference between two directories; copying between directories, calling Ediff for not matching files, hiding/showing equal files/directories. The comparison itself performed with the external `GNU diff` tool, so make sure to have one in executable path.
+**ztree-diff** is a directory-diff tool for Emacs inspired by commercial tools like Beyond Compare or Araxis Merge. It supports showing the difference between two directories; copying between directories, calling **Ediff** for not matching files, hiding/showing equal files/directories.
 
-Add the following to your .emacs file:
+The comparison itself performed with the external **GNU diff** tool, so make sure to have one in the executable path.
+
+As above add the following to your .emacs file:
 
 ```scheme
 (push (substitute-in-file-name "path-to-ztree-directory") load-path)
@@ -45,12 +47,12 @@ M-x ztree-dir
 ```
 Then you need to specify the left and right directories to compare.
 
-Hotkeys supported - same as for the `ztree-dir`. Additionally:
- * `RET` or `Space` on different files starts the Ediff
+###Hotkeys supported
+The basic hotkeys are the same as in the **ztree-dir**. Additionally:
+ * `RET` or `Space` on different files starts the **Ediff**
  * `TAB` to fast switch between panels
  * `h` key toggle show/hide identical files/directories
  * `C` key to copy current file or directory to the left or right panel
  * `F5` forces the full rescan.
 
-Screenshat
 ![ztreediff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_xterm.png "Emacs in xterm with ztree-diff")
