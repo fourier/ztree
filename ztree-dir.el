@@ -1,4 +1,4 @@
-;;; ztree.el --- Text mode directory tree
+;;; ztree-dir.el --- Text mode directory tree
 
 ;; Copyright (C) 2013 Alexey Veretennikov
 ;;
@@ -29,17 +29,16 @@
 ;; Add the following to your .emacs file:
 ;; 
 ;; (push (substitute-in-file-name "path-to-ztree-directory") load-path)
-;; (require 'ztree)
+;; (require 'ztree-dir)
 ;;
 ;; Call the ztree interactive function:
-;; M-x ztree
+;; M-x ztree-dir
 ;; Open/close directories with double-click, Enter or Space keys
 ;;
 ;;; Issues:
 ;;
 ;;; TODO:
 ;; 1) Add some file-handling and marking abilities
-;; 2) Extract tree code as as separate package
 ;;
 ;;
 ;;; Change Log:
@@ -90,7 +89,7 @@ including . and ..")
   (not (string-match ztree-hidden-files-regexp
                      (file-short-name filename))))
 
-(defun ztree (path)
+(defun ztree-dir (path)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DDirectory: ")
   (when (and (file-exists-p path) (file-directory-p path))
@@ -107,5 +106,5 @@ including . and ..")
                   nil))))               ; action
 
 
-(provide 'ztree)
-;;; ztree.el ends here
+(provide 'ztree-dir)
+;;; ztree-dir.el ends here

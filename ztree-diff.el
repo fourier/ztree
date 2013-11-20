@@ -243,7 +243,8 @@ apparently shall not be visible"
 
 
 (defun ztree-node-is-visible (node)
-  (and (not (ztree-node-is-in-filter-list (ztree-diff-node-short-name node)))
+  (and (ztree-diff-node-parent node)    ; parent is always visible
+       (not (ztree-node-is-in-filter-list (ztree-diff-node-short-name node)))
        (or ztree-diff-show-equal-files
            (ztree-diff-node-different node))))
 
