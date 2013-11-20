@@ -66,6 +66,14 @@
     (if (and left right) 'both
       (if left 'left 'right))))
 
+(defun ztree-diff-node-equal (node1 node2)
+  (and (string-equal (ztree-diff-node-short-name node1)
+                     (ztree-diff-node-short-name node2))
+       (string-equal (ztree-diff-node-left-path node1)
+                     (ztree-diff-node-left-path node2))
+       (string-equal (ztree-diff-node-right-path node1)
+                     (ztree-diff-node-right-path node1))))
+
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files using external diff. Returns t if equal"
   (let ((diff-output (shell-command-to-string (concat "diff -q" " " file1 " " file2))))
@@ -104,6 +112,21 @@
                'new)
               result)))
     result))
+
+(defun ztree-diff-node-update-diff-from-children (node)
+  (let ((children (ztree-diff-node-children node))
+        (diff nil))
+    (dolist (child children)
+      (setq diff
+            (ztree-diff-model-update-diff
+             diff
+             (ztree-diff-node-different child))))
+    (ztree-diff-node-set-different node diff)))
+
+(defun ztree-diff-node-update-all-parents-diff (node)
+  (let ((parent node))
+    (while (setq parent (ztree-diff-node-parent parent))
+      (ztree-diff-node-update-diff-from-children parent))))
 
 
 (defun ztree-diff-model-update-diff (old new)
@@ -217,6 +240,17 @@ the rest is the combined list of nodes"
     (ztree-diff-node-set-different model (car traverse))
     (message "Done.")
     model))
+
+(defun ztree-diff-model-update-node (node)
+  (setq ztree-diff-model-wait-message
+        (concat "Updating " (ztree-diff-node-short-name node) " ..."))
+  (let ((traverse (ztree-diff-node-traverse node
+                                            (ztree-diff-node-left-path node)
+                                            (ztree-diff-node-right-path node))))
+    (ztree-diff-node-set-children node (cdr traverse))
+    (ztree-diff-node-set-different node (car traverse))
+    (message "Done.")))
+    
 
 
 (provide 'ztree-diff-model)

@@ -126,9 +126,60 @@ including . and ..")
                            " on left and right side are identical"))
       (ediff left right)))))
 
-  ;; (let ((parent (ztree-diff-node-parent node)))
-  ;;   (when parent
-  ;;     (message (ztree-diff-node-short-name parent)))))
+
+(defun ztree-diff-copy-file (node source-path destination-path copy-to-right)
+  (let ((target-path (concat
+                      (file-name-as-directory destination-path)
+                      (file-name-nondirectory
+                       (directory-file-name source-path)))))
+    (let ((err (condition-case error-trap
+                   (progn
+                     ;; don't ask for overwrite
+                     ;; keep time stamp
+                     (copy-file source-path target-path t t)
+                     nil)
+                 (error error-trap))))
+      ;; error message if failed
+      (if err (message (concat "Error: " (nth 2 err)))
+        (progn              ; otherwise:
+          ;; assuming all went ok when left and right nodes are the same
+          ;; set both as not different
+          (ztree-diff-node-set-different node nil)
+          ;; update left/right paths
+          (if copy-to-right
+              (ztree-diff-node-set-right-path node target-path)
+            (ztree-diff-node-set-left-path node target-path))
+          (ztree-diff-node-update-all-parents-diff node)
+          (ztree-refresh-buffer (line-number-at-pos)))))))
+
+
+(defun ztree-diff-copy-dir (node source-path destination-path copy-to-right)
+  (let* ((src-path (file-name-as-directory source-path))
+         (target-path (file-name-as-directory destination-path))
+         (target-full-path (concat
+                            target-path
+                            (file-name-nondirectory
+                             (directory-file-name source-path)))))
+    (let ((err (condition-case error-trap
+                   (progn
+                     ;; keep time stamp
+                     ;; ask for overwrite
+                     (copy-directory src-path target-path t t)
+                     nil)
+                 (error error-trap))))
+      ;; error message if failed
+      (if err (message (concat "Error: " (nth 1 err)))
+        (progn
+          (message target-full-path)
+          (if copy-to-right
+              (ztree-diff-node-set-right-path node
+                                              target-full-path)
+            (ztree-diff-node-set-left-path node
+                                            target-full-path))
+          (ztree-diff-model-update-node node)
+         (ztree-diff-node-update-all-parents-diff node)
+         (ztree-refresh-buffer (line-number-at-pos)))))))
+
 
 (defun ztree-diff-copy ()
   (interactive)
@@ -166,30 +217,14 @@ including . and ..")
                                           (if copy-to-right "RIGHT" "LEFT")
                                           destination-path)))
             (if (file-directory-p source-path)
-                nil                     ; TODO: implement directory copy
-              (let ((target-path (concat
-                                  (file-name-as-directory destination-path)
-                                  (file-name-nondirectory
-                                   (directory-file-name source-path)))))
-                (let ((err (condition-case error-trap
-                               (progn
-                                 ;; ask for overwrite
-                                 ;; keep time stamp
-                                 (copy-file source-path target-path 1 t)
-                                 nil)
-                             (error error-trap))))
-                  ;; error message if failed
-                  (if err (message (concat "Error: " (nth 2 err)))
-                    (progn              ; otherwise:
-                      ;; assuming all went ok when left and right nodes are the same
-                      ;; set both as not different
-                      (ztree-diff-node-set-different node nil)
-                      ;; update left/right paths
-                      (if copy-to-right
-                          (ztree-diff-node-set-right-path node target-path)
-                        (ztree-diff-node-set-left-path node target-path))
-                      (ztree-refresh-buffer (line-number-at-pos)))))))))))))
-
+                (ztree-diff-copy-dir node
+                                     source-path
+                                     destination-path
+                                     copy-to-right)
+              (ztree-diff-copy-file node
+                                    source-path
+                                    destination-path
+                                    copy-to-right))))))))
           
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
@@ -203,7 +238,7 @@ including . and ..")
                 'ztree-diff-insert-buffer-header
                 'ztree-diff-node-short-name
                 'ztree-diff-node-is-directory
-                'equal
+                'ztree-diff-node-equal
                 'ztree-diff-node-children
                 'ztree-diff-node-face
                 'ztree-diff-node-action
