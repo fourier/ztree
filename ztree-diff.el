@@ -71,7 +71,7 @@ including . and ..")
 (defvar ztree-diff-filter-list nil
   "List of regexp file names to filter out")
 (make-variable-buffer-local 'ztree-diff-filter-list)
- 
+
 (defvar ztree-diff-dirs-pair nil
   "Pair of the directories stored. Used to perform the full rescan")
 (make-variable-buffer-local 'ztree-diff-dirs-pair)
@@ -91,6 +91,7 @@ including . and ..")
   `(
     (,(kbd "C") . ztree-diff-copy)
     (,(kbd "h") . ztree-diff-toggle-show-equal-files)
+    (,(kbd "D") . ztree-diff-delete-file)
     ([f5] . ztree-diff-full-rescan)))
 
 
@@ -133,7 +134,7 @@ including . and ..")
                            (substring-no-properties
                             (ztree-diff-node-short-name node))
                            " on left and right side are identical"))
-      (ediff left right)))))
+        (ediff left right)))))
 
 
 (defun ztree-diff-copy-file (node source-path destination-path copy-to-right)
@@ -184,10 +185,10 @@ including . and ..")
               (ztree-diff-node-set-right-path node
                                               target-full-path)
             (ztree-diff-node-set-left-path node
-                                            target-full-path))
+                                           target-full-path))
           (ztree-diff-model-update-node node)
-         (ztree-diff-node-update-all-parents-diff node)
-         (ztree-refresh-buffer (line-number-at-pos)))))))
+          (ztree-diff-node-update-all-parents-diff node)
+          (ztree-refresh-buffer (line-number-at-pos)))))))
 
 
 (defun ztree-diff-copy ()
@@ -203,7 +204,7 @@ including . and ..")
              (source-path nil)
              (destination-path nil)
              (parent (ztree-diff-node-parent node)))
-        (when parent
+        (when parent                ; do not copy the root node
           ;; determine a side to copy from/to
           ;; algorithm:
           ;; 1) if both side are present, use the side
@@ -236,6 +237,53 @@ including . and ..")
                                     copy-to-right))))))))
 
 
+(defun ztree-diff-delete-file ()
+  (interactive)
+  (let ((found (ztree-find-node-at-point)))
+    (when found
+      (let* ((node (car found))
+             (side (cdr found))
+             (node-side (ztree-diff-node-side node))
+             (delete-from-left t)
+             (remove-path nil)
+             (parent (ztree-diff-node-parent node)))
+        (when parent                    ; do not delete the root node
+          ;; algorithm for determining what to delete similar to copy:
+          ;; 1. if the file is present on both sides, delete
+          ;;    from the side currently selected
+          (setq delete-from-left (if (eq node-side 'both)
+                                     (eq side 'left)
+                                   ;; 2) if one of sides is absent, delete
+                                   ;; from the side where the file is present
+                                   (eq node-side 'left)))
+          (setq remove-path (if delete-from-left
+                                (ztree-diff-node-left-path node)
+                              (ztree-diff-node-right-path node)))
+          (when (yes-or-no-p (format "Delete the file [%s]%s ?"
+                                     (if delete-from-left "LEFT" "RIGHT")
+                                     remove-path))
+            (let* ((delete-command 
+                    (if (file-directory-p remove-path)
+                        '(delete-directory remove-path t)
+                      '(delete-file remove-path t)))
+                   (children (ztree-diff-node-children parent))
+                   (err 
+                    (condition-case error-trap
+                        (progn
+                          (eval delete-command)
+                          nil)
+                      (error error-trap))))
+              (if err (message (concat "Error: " (nth 2 err)))
+                (progn 
+                  (setq children (ztree-filter
+                                  #'(lambda (x) (not (ztree-diff-node-equal x node)))
+                                  children))
+                  (ztree-diff-node-set-children parent children))
+                (ztree-diff-node-update-all-parents-diff node)
+                (ztree-refresh-buffer (line-number-at-pos))))))))))
+
+
+
 (defun ztree-node-is-in-filter-list (node)
   "Determine if the node is in filter list (and therefore
 apparently shall not be visible"
@@ -253,7 +301,7 @@ apparently shall not be visible"
   (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
   (ztree-refresh-buffer))
 
-          
+
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")

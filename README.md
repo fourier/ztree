@@ -29,7 +29,7 @@ Open/close directories with double-click, `RET` or `Space` keys. To jump to the 
 
 ztree-diff
 ==========
-**ztree-diff** is a directory-diff tool for Emacs inspired by commercial tools like Beyond Compare or Araxis Merge. It supports showing the difference between two directories; copying between directories, calling **Ediff** for not matching files, hiding/showing equal files/directories.
+**ztree-diff** is a directory-diff tool for Emacs inspired by commercial tools like Beyond Compare or Araxis Merge. It supports showing the difference between two directories; calling **Ediff** for not matching files, copying between directories, deleting file/directories, hiding/showing equal files/directories.
 
 The comparison itself performed with the external **GNU diff** tool, so make sure to have one in the executable path.
 
@@ -53,6 +53,7 @@ The basic hotkeys are the same as in the **ztree-dir**. Additionally:
  * `TAB` to fast switch between panels
  * `h` key toggle show/hide identical files/directories
  * `C` key to copy current file or directory to the left or right panel
+ * `D` key to delete current file or directory
  * `F5` forces the full rescan.
 
 ![ztreediff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_xterm.png "Emacs in xterm with ztree-diff")
