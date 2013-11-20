@@ -165,8 +165,30 @@ including . and ..")
                                           (ztree-diff-node-short-name node)
                                           (if copy-to-right "RIGHT" "LEFT")
                                           destination-path)))
-            nil                         ; do copy
-            ))))))
+            (if (file-directory-p source-path)
+                nil                     ; TODO: implement directory copy
+              (let ((target-path (concat
+                                  (file-name-as-directory destination-path)
+                                  (file-name-nondirectory
+                                   (directory-file-name source-path)))))
+                (let ((err (condition-case error-trap
+                               (progn
+                                 ;; ask for overwrite
+                                 ;; keep time stamp
+                                 (copy-file source-path target-path 1 t)
+                                 nil)
+                             (error error-trap))))
+                  ;; error message if failed
+                  (if err (message (concat "Error: " (nth 2 err)))
+                    (progn              ; otherwise:
+                      ;; assuming all went ok when left and right nodes are the same
+                      ;; set both as not different
+                      (ztree-diff-node-set-different node nil)
+                      ;; update left/right paths
+                      (if copy-to-right
+                          (ztree-diff-node-set-right-path node target-path)
+                        (ztree-diff-node-set-left-path node target-path))
+                      (ztree-refresh-buffer (line-number-at-pos)))))))))))))
 
           
 (defun ztree-diff (dir1 dir2)
