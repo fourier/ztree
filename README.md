@@ -43,7 +43,7 @@ As above add the following to your .emacs file:
 Call the `ztree-diff` interactive function:
 
 ```
-M-x ztree-dir
+M-x ztree-diff
 ```
 Then you need to specify the left and right directories to compare.
 
