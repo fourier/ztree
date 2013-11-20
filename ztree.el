@@ -86,6 +86,10 @@ including . and ..")
     (set-text-properties start (point) '(face ztreep-header-face)))
   (newline))
 
+(defun ztree-file-not-hidden (filename)
+  (not (string-match ztree-hidden-files-regexp
+                     (file-short-name filename))))
+
 (defun ztree (path)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DDirectory: ")
@@ -93,7 +97,7 @@ including . and ..")
     (let ((buf-name (concat "*Directory " path " tree*")))
       (ztree-view buf-name
                   (expand-file-name (substitute-in-file-name path))
-                  (list ztree-hidden-files-regexp)
+                  'ztree-file-not-hidden
                   'ztree-insert-buffer-header
                   'file-short-name
                   'file-directory-p

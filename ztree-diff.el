@@ -68,10 +68,17 @@ including . and ..")
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
 
 
-(defvar ztreediff-dirs-pair nil
+(defvar ztree-diff-filter-list nil
+  "List of regexp file names to filter out")
+(make-variable-buffer-local 'ztree-diff-filter-list)
+ 
+(defvar ztree-diff-dirs-pair nil
   "Pair of the directories stored. Used to perform the full rescan")
-(make-variable-buffer-local 'ztrediff-dirs-par)
+(make-variable-buffer-local 'ztree-diff-dirs-pair)
 
+(defvar ztree-diff-show-equal-files t
+  "Show or not equal files/directories on both sides")
+(make-variable-buffer-local 'ztree-diff-show-equal-files)
 
 ;;;###autoload
 (define-minor-mode ztreediff-mode
@@ -83,6 +90,7 @@ including . and ..")
   ;; The minor mode keymap
   `(
     (,(kbd "C") . ztree-diff-copy)
+    (,(kbd "h") . ztree-diff-toggle-show-equal-files)
     ([f5] . ztree-diff-full-rescan)))
 
 
@@ -111,9 +119,9 @@ including . and ..")
 
 (defun ztree-diff-full-rescan ()
   (interactive)
-  (when (and ztreediff-dirs-pair
+  (when (and ztree-diff-dirs-pair
              (yes-or-no-p (format "Force full rescan?")))
-    (ztree-diff (car ztreediff-dirs-pair) (cdr ztreediff-dirs-pair))))
+    (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair))))
 
 
 (defun ztree-diff-node-action (node)
@@ -122,7 +130,8 @@ including . and ..")
     (when (and left right)
       (if (not (ztree-diff-node-different node))
           (message (concat "Files "
-                           (ztree-diff-node-short-name node)
+                           (substring-no-properties
+                            (ztree-diff-node-short-name node))
                            " on left and right side are identical"))
       (ediff left right)))))
 
@@ -225,16 +234,35 @@ including . and ..")
                                     source-path
                                     destination-path
                                     copy-to-right))))))))
+
+
+(defun ztree-node-is-in-filter-list (node)
+  "Determine if the node is in filter list (and therefore
+apparently shall not be visible"
+  (ztree-find ztree-diff-filter-list #'(lambda (rx) (string-match rx node))))
+
+
+(defun ztree-node-is-visible (node)
+  (and (not (ztree-node-is-in-filter-list (ztree-diff-node-short-name node)))
+       (or ztree-diff-show-equal-files
+           (ztree-diff-node-different node))))
+
+(defun ztree-diff-toggle-show-equal-files ()
+  (interactive)
+  (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
+  (ztree-refresh-buffer))
+
           
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
          (buf-name (concat "*" (ztree-diff-node-short-name difference) "*")))
-    (setq ztreediff-dirs-pair (cons dir1 dir2))
+    (setq ztree-diff-dirs-pair (cons dir1 dir2))
+    (setq ztree-diff-filter-list (list ztree-diff-hidden-files-regexp))
     (ztree-view buf-name
                 difference
-                (list ztree-diff-hidden-files-regexp)
+                'ztree-node-is-visible
                 'ztree-diff-insert-buffer-header
                 'ztree-diff-node-short-name
                 'ztree-diff-node-is-directory

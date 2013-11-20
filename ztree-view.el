@@ -65,10 +65,6 @@
  and the line.")
 (make-variable-buffer-local 'ztree-line-to-node-table)
 
-(defvar ztree-filter-list nil
-  "List of regexp for node names to filter out")
-(make-variable-buffer-local 'ztree-filter-list)
-
 (defvar ztree-start-line nil
   "Index of the start line - the root")
 (make-variable-buffer-local 'ztree-start-line)
@@ -126,6 +122,10 @@ the buffer is split to 2 trees")
 (defun ztree-node-action-fun nil
   "Function called when Enter/Space pressed on the node")
 (make-variable-buffer-local 'ztree-node-action-fun)
+
+(defvar ztree-node-showp-fun nil
+  "Function called to decide if the node should be visible")
+(make-variable-buffer-local 'ztree-node-showp-fun)
 
 
 ;;
@@ -282,11 +282,6 @@ list of leafs"
                  nodes) comp))))
                 
 
-(defun ztree-node-is-in-filter-list (node)
-  "Determine if the node is in filter list (and therefore
-apparently shall not be visible"
-  (ztree-find ztree-filter-list #'(lambda (rx) (string-match rx node))))
-
 (defun ztree-draw-char (c x y &optional face)
   "Draw char c at the position (1-based) (x y)"
   (save-excursion
@@ -409,22 +404,20 @@ apparently shall not be visible"
              (leafs (cdr contents)))    ; leafs - which doesn't have subleafs
         ;; iterate through all expandable entries to insert them first
         (dolist (node nodes)            
-          (let ((short-node-name (funcall ztree-node-short-name-fun node)))
-            ;; if it is not in the filter list
-            (unless (ztree-node-is-in-filter-list short-node-name)
-              ;; insert node on the next depth level
-              ;; and push the returning result (in form (root children))
-              ;; to the children list
-              (push (ztree-insert-node-contents-1 node (1+ depth))
-                    children))))
+          ;; if it is not in the filter list
+          (when (funcall ztree-node-showp-fun node)
+            ;; insert node on the next depth level
+            ;; and push the returning result (in form (root children))
+            ;; to the children list
+            (push (ztree-insert-node-contents-1 node (1+ depth))
+                  children)))
         ;; now iterate through all the leafs
         (dolist (leaf leafs)
-          (let ((short-leaf-name (funcall ztree-node-short-name-fun leaf)))
-            ;; if not in filter list
-            (when (not (ztree-node-is-in-filter-list short-leaf-name))
-              ;; insert the leaf and add it to children
-              (push (ztree-insert-entry leaf (1+ depth) nil)
-                    children))))))
+          ;; if not in filter list
+          (when (funcall ztree-node-showp-fun leaf)
+            ;; insert the leaf and add it to children
+            (push (ztree-insert-entry leaf (1+ depth) nil)
+                    children)))))
     ;; result value is the list - head is the root line,
     ;; rest are children 
     (cons root-line children)))
@@ -515,7 +508,7 @@ apparently shall not be visible"
 (defun ztree-view (
                    buffer-name
                    start-node
-                   filter-list
+                   filter-fun
                    header-fun
                    short-name-fun
                    expandable-p
@@ -531,7 +524,7 @@ apparently shall not be visible"
     ;; configure ztree-view
     (setq ztree-start-node start-node)
     (setq ztree-expanded-nodes-list (list ztree-start-node))
-    (setq ztree-filter-list filter-list)
+    (setq ztree-node-showp-fun filter-fun)
     (setq ztree-tree-header-fun header-fun)
     (setq ztree-node-short-name-fun short-name-fun)
     (setq ztree-node-is-expandable-fun expandable-p)
