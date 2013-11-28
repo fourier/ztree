@@ -92,6 +92,7 @@ including . and ..")
     (,(kbd "C") . ztree-diff-copy)
     (,(kbd "h") . ztree-diff-toggle-show-equal-files)
     (,(kbd "D") . ztree-diff-delete-file)
+    (,(kbd "v") . ztree-diff-view-file)
     ([f5] . ztree-diff-full-rescan)))
 
 
@@ -119,6 +120,7 @@ including . and ..")
   (newline))
 
 (defun ztree-diff-full-rescan ()
+  "Forces full rescan of the directory trees"
   (interactive)
   (when (and ztree-diff-dirs-pair
              (yes-or-no-p (format "Force full rescan?")))
@@ -236,6 +238,25 @@ including . and ..")
                                     destination-path
                                     copy-to-right))))))))
 
+(defun ztree-diff-view-file ()
+  "View file at point, depending on side"
+  (interactive)
+  (let ((found (ztree-find-node-at-point)))
+    (when found
+      (let* ((node (car found))
+             (side (cdr found))
+             (node-side (ztree-diff-node-side node))
+             (node-left (ztree-diff-node-left-path node))
+             (node-right (ztree-diff-node-right-path node)))
+        (when (or (eq node-side 'both)
+                  (eq side node-side))
+          (cond ((and (eq side 'left)
+                      node-left)
+                 (view-file node-left))
+                ((and (eq side 'right)
+                      node-right)
+                 (view-file node-right))))))))
+  
 
 (defun ztree-diff-delete-file ()
   (interactive)
@@ -307,7 +328,6 @@ apparently shall not be visible"
   (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
          (buf-name (concat "*" (ztree-diff-node-short-name difference) "*")))
-    (setq ztree-diff-dirs-pair (cons dir1 dir2))
     (setq ztree-diff-filter-list (list ztree-diff-hidden-files-regexp))
     (ztree-view buf-name
                 difference
@@ -320,7 +340,9 @@ apparently shall not be visible"
                 'ztree-diff-node-face
                 'ztree-diff-node-action
                 'ztree-diff-node-side)
-    (ztreediff-mode)))
+    (ztreediff-mode)
+    (setq ztree-diff-dirs-pair (cons dir1 dir2))))
+
 
 
 (provide 'ztree-diff)
