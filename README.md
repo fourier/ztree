@@ -54,6 +54,7 @@ The basic hotkeys are the same as in the **ztree-dir**. Additionally:
  * `h` key toggle show/hide identical files/directories
  * `C` key to copy current file or directory to the left or right panel
  * `D` key to delete current file or directory
+ * `v` key to quick view the current file
  * `F5` forces the full rescan.
 
 ![ztreediff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_xterm.png "Emacs in xterm with ztree-diff")
