@@ -93,6 +93,7 @@ including . and ..")
     (,(kbd "h") . ztree-diff-toggle-show-equal-files)
     (,(kbd "D") . ztree-diff-delete-file)
     (,(kbd "v") . ztree-diff-view-file)
+    (,(kbd "d") . ztree-diff-simple-diff-files)
     ([f5] . ztree-diff-full-rescan)))
 
 
@@ -105,7 +106,14 @@ including . and ..")
 (defun ztree-diff-insert-buffer-header ()
   (insert-with-face "Differences tree" ztreep-diff-header-face)
   (newline)
-  (insert-with-face"Legend:" ztreep-diff-header-small-face)
+  (when ztree-diff-dirs-pair
+    (insert-with-face (concat "Left:  " (car ztree-diff-dirs-pair))
+                      ztreep-diff-header-small-face)
+    (newline)
+    (insert-with-face (concat "Right: " (cdr ztree-diff-dirs-pair))
+                      ztreep-diff-header-small-face)
+    (newline))
+  (insert-with-face "Legend:" ztreep-diff-header-small-face)
   (newline)
   (insert-with-face " Normal file " ztreep-diff-model-normal-face)
   (insert-with-face "- same on both sides" ztreep-diff-header-small-face)
@@ -125,6 +133,24 @@ including . and ..")
   (when (and ztree-diff-dirs-pair
              (yes-or-no-p (format "Force full rescan?")))
     (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair))))
+
+
+(defun ztree-diff-simple-diff-files ()
+  "Create a simple diff buffer for files from left and right panels"
+  (interactive)
+  (let ((found (ztree-find-node-at-point)))
+    (when found
+      (let* ((node (car found))
+             (node-left (ztree-diff-node-left-path node))
+             (node-right (ztree-diff-node-right-path node)))
+        (when (and
+               node-left
+               node-right
+               (not (file-directory-p node-left)))
+          ;; show the diff window on the bottom
+          ;; to not to crush tree appearance
+          (let ((split-width-threshold nil))
+            (diff node-left node-right)))))))
 
 
 (defun ztree-diff-node-action (node)
@@ -341,7 +367,9 @@ apparently shall not be visible"
                 'ztree-diff-node-action
                 'ztree-diff-node-side)
     (ztreediff-mode)
-    (setq ztree-diff-dirs-pair (cons dir1 dir2))))
+    (setq ztree-diff-dirs-pair (cons dir1 dir2))
+    (ztree-refresh-buffer)))
+          
 
 
 
