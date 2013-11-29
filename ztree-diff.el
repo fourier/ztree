@@ -158,17 +158,28 @@ including . and ..")
         (ztree-diff-simple-diff node)))))
 
 (defun ztree-diff-node-action (node hard)
+  "Perform action on node:
+1 if both left and right sides present:
+   1.1 if they are differend
+      1.1.1 if hard ediff
+      1.1.2 simple diff otherwiste
+   1.2 if they are the same - view left
+2 if left or right present - view left or rigth"
   (let ((left (ztree-diff-node-left-path node))
-        (right (ztree-diff-node-right-path node)))
-    (when (and left right)
-      (if (not (ztree-diff-node-different node))
-          (message (concat "Files "
-                           (substring-no-properties
-                            (ztree-diff-node-short-name node))
-                           " on left and right side are identical"))
-        (if hard
-            (ediff left right)
-          (ztree-diff-simple-diff node))))))
+        (right (ztree-diff-node-right-path node))
+        (open-f '(lambda (path) (if hard (find-file path)
+                                  (let ((split-width-threshold nil))
+                                    (view-file-other-window path))))))
+    (cond ((and left right)
+           (if (not (ztree-diff-node-different node))
+               (funcall open-f left)
+             (if hard
+                 (ediff left right)
+               (ztree-diff-simple-diff node))))
+          (left (funcall open-f left))
+          (right (funcall open-f right))
+          (t nil))))
+           
 
 
 (defun ztree-diff-copy-file (node source-path destination-path copy-to-right)
