@@ -58,4 +58,8 @@ The basic hotkeys are the same as in the **ztree-dir**. Additionally:
  * `v` key to quick view the current file
  * `F5` forces the full rescan.
 
+Screenshots:
+
 ![ztreediff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_xterm.png "Emacs in xterm with ztree-diff")
+
+![ztreediff-diff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_simplediff_xterm.png "Emacs in xterm with ztree-diff and simple diff")
