@@ -135,25 +135,29 @@ including . and ..")
     (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair))))
 
 
+(defun ztree-diff-simple-diff (node)
+  "Create a simple diff buffer for files from left and right panels"
+  (let* ((node-left (ztree-diff-node-left-path node))
+         (node-right (ztree-diff-node-right-path node)))
+    (when (and
+           node-left
+           node-right
+           (not (file-directory-p node-left)))
+      ;; show the diff window on the bottom
+      ;; to not to crush tree appearance
+      (let ((split-width-threshold nil))
+        (diff node-left node-right)))))
+
+
 (defun ztree-diff-simple-diff-files ()
   "Create a simple diff buffer for files from left and right panels"
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
-      (let* ((node (car found))
-             (node-left (ztree-diff-node-left-path node))
-             (node-right (ztree-diff-node-right-path node)))
-        (when (and
-               node-left
-               node-right
-               (not (file-directory-p node-left)))
-          ;; show the diff window on the bottom
-          ;; to not to crush tree appearance
-          (let ((split-width-threshold nil))
-            (diff node-left node-right)))))))
+      (let ((node (car found)))
+        (ztree-diff-simple-diff node)))))
 
-
-(defun ztree-diff-node-action (node)
+(defun ztree-diff-node-action (node hard)
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
     (when (and left right)
@@ -162,7 +166,9 @@ including . and ..")
                            (substring-no-properties
                             (ztree-diff-node-short-name node))
                            " on left and right side are identical"))
-        (ediff left right)))))
+        (if hard
+            (ediff left right)
+          (ztree-diff-simple-diff node))))))
 
 
 (defun ztree-diff-copy-file (node source-path destination-path copy-to-right)

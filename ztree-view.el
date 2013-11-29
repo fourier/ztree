@@ -135,7 +135,7 @@ the buffer is split to 2 trees")
 (defvar ztree-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "\r") 'ztree-perform-action)
-    (define-key map (kbd "SPC") 'ztree-perform-action)
+    (define-key map (kbd "SPC") 'ztree-perform-soft-action)
     (define-key map [double-mouse-1] 'ztree-perform-action)
     (define-key map (kbd "TAB") 'ztree-jump-side)
     (define-key map (kbd "g") 'ztree-refresh-buffer)
@@ -218,24 +218,35 @@ if there is no node"
   (forward-line (1- line)))
 
 
-(defun ztree-perform-action ()
-  "Toggle expand/collapsed state for nodes"
-  (interactive)
+(defun ztree-do-perform-action (hard)
   (let* ((line (line-number-at-pos))
          (node (ztree-find-node-in-line line)))
     (when node
       (if (funcall ztree-node-is-expandable-fun node)
           ;; only for expandable nodes
           (ztree-toggle-expand-state node)
-        ;; do nothing leafs files for now
+        ;; perform action
         (when ztree-node-action-fun
-          (funcall ztree-node-action-fun node)))
+          (funcall ztree-node-action-fun node hard)))
       ;; save the current window start position
       (let ((current-pos (window-start)))
         ;; refresh buffer and scroll back to the saved line
         (ztree-refresh-buffer line)
         ;; restore window start position
         (set-window-start (selected-window) current-pos))))) 
+  
+
+(defun ztree-perform-action ()
+  "Toggle expand/collapsed state for nodes or perform hard action,
+binded on RET, on node"
+  (interactive)
+  (ztree-do-perform-action t))
+
+(defun ztree-perform-soft-action ()
+  "Toggle expand/collapsed state for nodes or perform soft action,
+binded on Space, on node"
+  (interactive)
+  (ztree-do-perform-action nil))
 
 
 (defun ztree-toggle-expand-state (node)
