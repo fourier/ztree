@@ -427,7 +427,7 @@ list of leafs"
         (expandable (funcall ztree-node-is-expandable-fun node))
         (short-name (funcall ztree-node-short-name-fun node)))
     (if ztree-node-side-fun           ; 2-sided tree
-        (let ((right-short-name short-name)
+        (let ((right-short-name (funcall ztree-node-short-name-fun node t))
               (side (funcall ztree-node-side-fun node))
               (width (window-width)))
           (when (eq side 'left)  (setq right-short-name ""))

@@ -50,7 +50,12 @@
 ;; short-name - is the file or directory name
 ;; children - list of nodes - files or directories if the node is a directory
 ;; different = {nil, 'new, 'diff} - means comparison status
-(defrecord ztree-diff-node (parent left-path right-path short-name children different))
+(defrecord ztree-diff-node (parent left-path right-path short-name right-short-name children different))
+
+(defun ztree-diff-node-short-name-wrapper (node &optional right-side)
+  (if (not right-side)
+      (ztree-diff-node-short-name node)
+    (ztree-diff-node-right-short-name node)))
 
 
 (defun ztree-diff-node-is-directory (node)
@@ -98,6 +103,7 @@
                         (when (eq side 'left) file)
                         (when (eq side 'right) file)
                         (file-short-name file)
+                        (file-short-name file)
                         nil
                         'new))
                  (children (ztree-diff-model-subtree node file side)))
@@ -107,6 +113,7 @@
                parent
                (when (eq side 'left) file)
                (when (eq side 'right) file)
+               (file-short-name file)
                (file-short-name file)
                nil
                'new)
@@ -156,7 +163,7 @@ the rest is the combined list of nodes"
              (different nil)
              ;; create the current node to be set as parent to
              ;; subdirectories
-             (node (ztree-diff-node-create parent file1 nil simple-name nil nil))
+             (node (ztree-diff-node-create parent file1 nil simple-name simple-name nil nil))
              ;; 1. find if the file is in the second directory and the type
              ;;    is the same - i.e. both are directories or both are files
              (file2 (ztree-find list2
@@ -201,7 +208,7 @@ the rest is the combined list of nodes"
              (isdir (file-directory-p file2))
              (children nil)
              ;; create the node to be added to the results list
-             (node (ztree-diff-node-create parent nil file2 simple-name nil 'new))
+             (node (ztree-diff-node-create parent nil file2 simple-name simple-name nil 'new))
              ;; 1. find if the file is in the first directory and the type
              ;;    is the same - i.e. both are directories or both are files
              (file1 (ztree-find list1
@@ -230,9 +237,8 @@ the rest is the combined list of nodes"
   (setq ztree-diff-model-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
   (let* ((model 
           (ztree-diff-node-create nil dir1 dir2
-                                  (concat (file-short-name dir1)
-                                          " <--> "
-                                          (file-short-name dir2))
+                                  (file-short-name dir1)
+                                  (file-short-name dir2)
                                   nil
                                   nil))
          (traverse (ztree-diff-node-traverse model dir1 dir2)))

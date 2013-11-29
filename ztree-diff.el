@@ -353,13 +353,17 @@ apparently shall not be visible"
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
-         (buf-name (concat "*" (ztree-diff-node-short-name difference) "*")))
+         (buf-name (concat "*"
+                           (ztree-diff-node-short-name difference)
+                           " <--> "
+                           (ztree-diff-node-right-short-name difference)
+                           "*")))
     (setq ztree-diff-filter-list (list ztree-diff-hidden-files-regexp))
     (ztree-view buf-name
                 difference
                 'ztree-node-is-visible
                 'ztree-diff-insert-buffer-header
-                'ztree-diff-node-short-name
+                'ztree-diff-node-short-name-wrapper
                 'ztree-diff-node-is-directory
                 'ztree-diff-node-equal
                 'ztree-diff-node-children
