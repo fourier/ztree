@@ -49,8 +49,8 @@ Then you need to specify the left and right directories to compare.
 
 ###Hotkeys supported
 The basic hotkeys are the same as in the **ztree-dir**. Additionally:
- * `RET` on different files starts the **Ediff**
- * `Space` or `d` key show the simple diff window for the current file instead of **Ediff**
+ * `RET` on different files starts the **Ediff** (or open file if one absent or the same)
+ * `Space` show the simple diff window for the current file instead of **Ediff** (or view file if one absent or the same)
  * `TAB` to fast switch between panels
  * `h` key to toggle show/hide identical files/directories
  * `C` key to copy current file or directory to the left or right panel
