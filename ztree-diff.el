@@ -94,6 +94,7 @@ including . and ..")
     (,(kbd "D") . ztree-diff-delete-file)
     (,(kbd "v") . ztree-diff-view-file)
     (,(kbd "d") . ztree-diff-simple-diff-files)
+    (,(kbd "r") . ztree-diff-partial-rescan)
     ([f5] . ztree-diff-full-rescan)))
 
 
@@ -134,6 +135,43 @@ including . and ..")
              (yes-or-no-p (format "Force full rescan?")))
     (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair))))
 
+
+
+(defun ztree-diff-existing-common (node)
+  (let ((left (ztree-diff-node-left-path node))
+        (right (ztree-diff-node-right-path node)))
+    (princ (ztree-diff-node-to-string node))
+    (if (and left right
+             (file-exists-p left)
+             (file-exists-p right))
+        node
+      nil)))
+      
+(defun ztree-diff-existing-common-parent (node)
+  (let ((common (ztree-diff-existing-common node)))
+    (if common
+        common
+      (ztree-diff-existing-common-parent (ztree-diff-node-parent node)))))
+
+(defun ztree-diff-do-partial-rescan (node)
+  (let* ((common (ztree-diff-existing-common-parent node))
+         (parent (ztree-diff-node-parent common)))
+    (if (not parent)
+        (when ztree-diff-dirs-pair
+          (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair)))
+      (progn
+        (ztree-diff-model-partial-rescan common)
+        (ztree-diff-node-update-all-parents-diff node)
+        (ztree-refresh-buffer (line-number-at-pos))))))
+  
+
+(defun ztree-diff-partial-rescan ()
+  "Performs partial rescan on the current node"
+  (interactive)
+  (let ((found (ztree-find-node-at-point)))
+    (when found
+      (ztree-diff-do-partial-rescan (car found)))))
+  
 
 (defun ztree-diff-simple-diff (node)
   "Create a simple diff buffer for files from left and right panels"

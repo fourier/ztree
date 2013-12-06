@@ -56,6 +56,7 @@ The basic hotkeys are the same as in the **ztree-dir**. Additionally:
  * `C` key to copy current file or directory to the left or right panel
  * `D` key to delete current file or directory
  * `v` key to quick view the current file
+ * `r` initiates the rescan/refresh of current file or subdirectory
  * `F5` forces the full rescan.
 
 Screenshots:
