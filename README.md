@@ -1,39 +1,15 @@
 ztree
 =====
 
-Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: **ztree-dir** and **ztree-diff**.
-
-ztree-dir
----------
-**ztree-dir** is a simple text-mode directory tree for Emacs. See screenshots below for the GUI and the terminal versions of the **ztree-dir**.
-
-Add the following to your .emacs file:
-
-```scheme
-(push (substitute-in-file-name "path-to-ztree-directory") load-path)
-(require 'ztree-dir)
-```
-
-Call the `ztree-dir` interactive function:
-
-```
-M-x ztree-dir
-```
-
-Open/close directories with double-click, `RET` or `Space` keys. To jump to the parent directory, hit the `Backspace` key.
-
-
-![ztree emacsapp](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_app.png "Emacs App with ztree-dir")
-
-![ztree emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_xterm.png "Emacs in xterm with ztree-dir")
+Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: **ztree-diff** and **ztree-dir**(the basis of **ztree-diff**)
 
 ztree-diff
 ==========
 **ztree-diff** is a directory-diff tool for Emacs inspired by commercial tools like Beyond Compare or Araxis Merge. It supports showing the difference between two directories; calling **Ediff** for not matching files, copying between directories, deleting file/directories, hiding/showing equal files/directories.
 
-The comparison itself performed with the external **GNU diff** tool, so make sure to have one in the executable path.
+The comparison itself performed with the external **GNU diff** tool, so make sure to have one in the executable path. Verified on OSX and Linux.
 
-As above add the following to your .emacs file:
+Add the following to your .emacs file:
 
 ```scheme
 (push (substitute-in-file-name "path-to-ztree-directory") load-path)
@@ -64,3 +40,29 @@ Screenshots:
 ![ztreediff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_xterm.png "Emacs in xterm with ztree-diff")
 
 ![ztreediff-diff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_simplediff_xterm.png "Emacs in xterm with ztree-diff and simple diff")
+
+
+ztree-dir
+---------
+**ztree-dir** is a simple text-mode directory tree for Emacs. See screenshots below for the GUI and the terminal versions of the **ztree-dir**.
+
+As above Add the following to your .emacs file:
+
+```scheme
+(push (substitute-in-file-name "path-to-ztree-directory") load-path)
+(require 'ztree-dir)
+```
+
+Call the `ztree-dir` interactive function:
+
+```
+M-x ztree-dir
+```
+
+Open/close directories with double-click, `RET` or `Space` keys. To jump to the parent directory, hit the `Backspace` key.
+
+
+![ztree emacsapp](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_app.png "Emacs App with ztree-dir")
+
+![ztree emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_xterm.png "Emacs in xterm with ztree-dir")
+
