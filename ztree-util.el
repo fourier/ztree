@@ -75,15 +75,15 @@ argument - the record; \"field\" is from \"record-fields\" symbols
 arguments - the record and the field value
 
 Example:
-`(defrecord person (name age))`
+\(defrecord person (name age))
 
 will be expanded to the following functions:
 
-`(defun person-create (name age) (...)`
-`(defun person-name (record) (...)`
-`(defun person-age (record) (...)`
-`(defun person-set-name (record value) (...)`
-`(defun person-set-age (record value) (...)`"
+\(defun person-create (name age) (...)
+\(defun person-name (record) (...)
+\(defun person-age (record) (...)
+\(defun person-set-name (record value) (...)
+\(defun person-set-age (record value) (...)"
   (let ((ctor-name (intern (concat (symbol-name record-name) "-create")))
         (rec-var (make-symbol "record")))
     `(progn

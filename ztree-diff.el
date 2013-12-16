@@ -140,7 +140,6 @@ including . and ..")
 (defun ztree-diff-existing-common (node)
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
-    (princ (ztree-diff-node-to-string node))
     (if (and left right
              (file-exists-p left)
              (file-exists-p right))
