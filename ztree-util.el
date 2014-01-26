@@ -26,6 +26,7 @@
 ;;
 ;;; Commentary:
 
+;;; Code:
 (defun ztree-find (where which)
   "find element of the list `where` matching predicate `which`"
   (catch 'found
@@ -120,3 +121,5 @@ will be expanded to the following functions:
 
 
 (provide 'ztree-util)
+
+;;; ztree-util.el ends here

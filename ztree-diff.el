@@ -26,6 +26,7 @@
 ;;
 ;;; Commentary:
 
+;;; Code:
 (require 'ztree-view)
 (require 'ztree-diff-model)
 
