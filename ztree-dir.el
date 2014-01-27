@@ -89,6 +89,7 @@ including . and ..")
   (not (string-match ztree-hidden-files-regexp
                      (file-short-name filename))))
 
+;;;###autoload
 (defun ztree-dir (path)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DDirectory: ")
