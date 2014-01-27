@@ -403,7 +403,7 @@ apparently shall not be visible"
   (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
   (ztree-refresh-buffer))
 
-
+;;;###autoload
 (defun ztree-diff (dir1 dir2)
   "Creates an interactive buffer with the directory tree of the path given"
   (interactive "DLeft directory \nDRight directory ")
