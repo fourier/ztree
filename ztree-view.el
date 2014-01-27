@@ -548,4 +548,4 @@ list of leafs"
 
 
 (provide 'ztree-view)
-;;; ztree.el ends here
+;;; ztree-view.el ends here

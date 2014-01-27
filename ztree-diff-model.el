@@ -28,6 +28,7 @@
 
 ;; Diff model
 
+;;; Code:
 (require 'ztree-util)
 
 (defvar ztree-diff-model-wait-message nil
@@ -310,3 +311,5 @@ the rest is the combined list of nodes"
 
 
 (provide 'ztree-diff-model)
+
+;;; ztree-diff-model.el ends here
