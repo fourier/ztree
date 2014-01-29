@@ -80,10 +80,10 @@ including . and ..")
 (defun ztree-insert-buffer-header ()
   (let ((start (point)))
     (insert "Directory tree")
-    (newline)
+    (newline-and-begin)
     (insert "==============")
     (set-text-properties start (point) '(face ztreep-header-face)))
-  (newline))
+  (newline-and-begin))
 
 (defun ztree-file-not-hidden (filename)
   (not (string-match ztree-hidden-files-regexp
