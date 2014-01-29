@@ -89,6 +89,16 @@ including . and ..")
   (not (string-match ztree-hidden-files-regexp
                      (file-short-name filename))))
 
+(defun ztree-find-file (node hard)
+  "Finds the file at NODE.
+
+If HARD is non-nil, the file is opened in another window.
+Otherwise, the ztree window is used to find the file."
+  (when (and (stringp node) (file-readable-p node))
+    (if hard
+        (save-selected-window (find-file-other-window node))
+      (find-file node))))
+
 ;;;###autoload
 (defun ztree-dir (path)
   "Creates an interactive buffer with the directory tree of the path given"
@@ -104,7 +114,7 @@ including . and ..")
                   'string-equal
                   '(lambda (x) (directory-files x 'full))
                   nil                   ; face
-                  nil))))               ; action
+                  'ztree-find-file)))) ; action
 
 
 (provide 'ztree-dir)
