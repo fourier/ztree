@@ -179,9 +179,16 @@ the buffer is split to 2 trees")
 
 ;;;###autoload
 (define-derived-mode ztree-mode special-mode "Ztree"
+  "A major mode for displaying the directory tree in text mode."
   ;; only spaces
   (setq indent-tabs-mode nil)
-  "A major mode for displaying the directory tree in text mode.")
+  ;; fix for electric-indent-mode
+  ;; for emacs 24.4
+  (if (fboundp 'electric-indent-local-mode)
+      (electric-indent-local-mode -1)
+    ;; for emacs 24.3 or less
+    (add-hook 'electric-indent-functions
+              (lambda (arg) 'no-indent) nil 'local)))
 
 
 (defun ztree-find-node-in-line (line)
@@ -454,7 +461,7 @@ list of leafs"
           (puthash line side ztree-line-tree-properties))
       (ztree-insert-single-entry short-name depth expandable expanded 0))
     (puthash line node ztree-line-to-node-table)    
-    (newline)
+    (newline-and-begin)
     line))
 
 (defun ztree-insert-single-entry (short-name depth
