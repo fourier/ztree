@@ -59,7 +59,9 @@ Call the `ztree-dir` interactive function:
 M-x ztree-dir
 ```
 
-Open/close directories with double-click, `RET` or `Space` keys. To jump to the parent directory, hit the `Backspace` key.
+* Open/close directories with double-click, `RET` or `Space` keys.
+* To jump to the parent directory, hit the `Backspace` key.
+* To toggle open/closed state of the subtree of the current directory, hit the `x` key.
 
 
 ![ztree emacsapp](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_app.png "Emacs App with ztree-dir")

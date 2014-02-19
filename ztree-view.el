@@ -139,6 +139,7 @@ the buffer is split to 2 trees")
     (define-key map [double-mouse-1] 'ztree-perform-action)
     (define-key map (kbd "TAB") 'ztree-jump-side)
     (define-key map (kbd "g") 'ztree-refresh-buffer)
+    (define-key map (kbd "x") 'ztree-toggle-expand-subtree)
     (if window-system
         (define-key map (kbd "<backspace>") 'ztree-move-up-in-tree)
       (define-key map "\177" 'ztree-move-up-in-tree))
@@ -225,6 +226,30 @@ if there is no node"
   (forward-line (1- line)))
 
 
+(defun ztree-do-toggle-expand-subtree-iter (node state)
+  (when (funcall ztree-node-is-expandable-fun node)
+    (let ((children (funcall ztree-node-contents-fun node)))
+      (ztree-do-toggle-expand-state node state)
+      (dolist (child children)
+        (ztree-do-toggle-expand-subtree-iter child state)))))
+
+     
+(defun ztree-do-toggle-expand-subtree ()
+  (let* ((line (line-number-at-pos))
+         (node (ztree-find-node-in-line line))
+         ;; save the current window start position
+         (current-pos (window-start)))
+    ;; only for expandable nodes
+    (when (funcall ztree-node-is-expandable-fun node)
+      ;; get the current expand state and invert it 
+      (let ((do-expand (not (ztree-is-expanded-node node))))
+        (ztree-do-toggle-expand-subtree-iter node do-expand))
+      ;; refresh buffer and scroll back to the saved line
+      (ztree-refresh-buffer line)
+      ;; restore window start position
+      (set-window-start (selected-window) current-pos))))
+          
+
 (defun ztree-do-perform-action (hard)
   (let* ((line (line-number-at-pos))
          (node (ztree-find-node-in-line line)))
@@ -256,14 +281,24 @@ binded on Space, on node"
   (ztree-do-perform-action nil))
 
 
-(defun ztree-toggle-expand-state (node)
-  "Toggle expanded/collapsed state for nodes"
-  (if (ztree-is-expanded-node node)
+(defun ztree-toggle-expand-subtree()
+  "Toggle Expanded/Collapsed state on all nodes of the subtree"
+  (interactive)
+  (ztree-do-toggle-expand-subtree))
+
+(defun ztree-do-toggle-expand-state (node do-expand)
+  "Set the expanded state of the node to do-expand"
+  (if (not do-expand)
       (setq ztree-expanded-nodes-list
             (ztree-filter
              #'(lambda (x) (not (funcall ztree-node-equal-fun node x)))
              ztree-expanded-nodes-list))
     (push node ztree-expanded-nodes-list)))
+
+   
+(defun ztree-toggle-expand-state (node)
+  "Toggle expanded/collapsed state for nodes"
+  (ztree-do-toggle-expand-state node (not (ztree-is-expanded-node node))))
 
 
 (defun ztree-move-up-in-tree ()
@@ -285,10 +320,10 @@ if previous key was Backspace - close the node"
                  (scroll-to-line parent)))))))
 
 
-(defun ztree-get-splitted-node-contens (path)
+(defun ztree-get-splitted-node-contens (node)
   "Returns pair of 2 elements: list of expandable nodes and
 list of leafs"
-  (let ((nodes (funcall ztree-node-contents-fun path))
+  (let ((nodes (funcall ztree-node-contents-fun node))
         (comp  #'(lambda (x y)
                  (string< (funcall ztree-node-short-name-fun x)
                           (funcall ztree-node-short-name-fun y)))))
