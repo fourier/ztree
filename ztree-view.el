@@ -346,11 +346,17 @@ list of leafs"
     (put-text-property (1- (point)) (point) 'face (if face face 'ztreep-arrow-face))))
 
 (defun ztree-draw-vertical-line (y1 y2 x &optional face)
-  (if (> y1 y2)
-      (dotimes (y (1+ (- y1 y2)))
-        (ztree-draw-char ?\| x (+ y2 y) face))
-    (dotimes (y (1+ (- y2 y1)))
-      (ztree-draw-char ?\| x (+ y1 y) face))))
+  "Draw a vertical line of '|' characters finishing with '`' character"
+  (let ((count (abs (- y1 y2)))) 
+    (if (> y1 y2)
+        (progn
+          (dotimes (y count)
+            (ztree-draw-char ?\| x (+ y2 y) face))
+          (ztree-draw-char ?\` x (+ y2 count) face))
+      (progn
+        (dotimes (y count)
+          (ztree-draw-char ?\| x (+ y1 y) face))
+        (ztree-draw-char ?\` x (+ y1 count) face)))))        
 
 (defun ztree-draw-horizontal-line (x1 x2 y)
   (if (> x1 x2)

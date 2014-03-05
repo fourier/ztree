@@ -1,7 +1,8 @@
 ztree
 =====
 
-Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: **ztree-diff** and **ztree-dir**(the basis of **ztree-diff**)
+Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: **ztree-diff** and **ztree-dir**(the basis of **ztree-diff**). Available in MELPA (http://melpa.milkbox.net/#/).
+
 
 ztree-diff
 ==========
