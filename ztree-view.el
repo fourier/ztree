@@ -346,6 +346,19 @@ list of leafs"
     (put-text-property (1- (point)) (point) 'face (if face face 'ztreep-arrow-face))))
 
 (defun ztree-draw-vertical-line (y1 y2 x &optional face)
+  "Draw a vertical line of '|' characters"
+  (let ((count (abs (- y1 y2)))) 
+    (if (> y1 y2)
+        (progn
+          (dotimes (y count)
+            (ztree-draw-char ?\| x (+ y2 y) face))
+          (ztree-draw-char ?\| x (+ y2 count) face))
+      (progn
+        (dotimes (y count)
+          (ztree-draw-char ?\| x (+ y1 y) face))
+        (ztree-draw-char ?\| x (+ y1 count) face)))))        
+
+(defun ztree-draw-vertical-rounded-line (y1 y2 x &optional face)
   "Draw a vertical line of '|' characters finishing with '`' character"
   (let ((count (abs (- y1 y2)))) 
     (if (> y1 y2)
@@ -357,6 +370,7 @@ list of leafs"
         (dotimes (y count)
           (ztree-draw-char ?\| x (+ y1 y) face))
         (ztree-draw-char ?\` x (+ y1 count) face)))))        
+
 
 (defun ztree-draw-horizontal-line (x1 x2 y)
   (if (> x1 x2)
@@ -397,9 +411,9 @@ list of leafs"
                                           (funcall visible (car-atom x)))))
               (x-offset (+ 2 offset)))
           (when last-child
-            (ztree-draw-vertical-line (1+ root)
-                                      (car-atom last-child)
-                                      x-offset)))
+            (ztree-draw-vertical-rounded-line (1+ root)
+                                              (car-atom last-child)
+                                              x-offset)))
         ;; draw recursively
         (dolist (child children)
           (ztree-draw-tree child (1+ depth) start-offset)
