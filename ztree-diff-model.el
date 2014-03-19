@@ -105,11 +105,20 @@
        (string-equal (ztree-diff-node-right-path node1)
                      (ztree-diff-node-right-path node1))))
 
+(defun ztree-diff-untrampify-filename (file)
+  "Returns `file' as the local file name."
+  (require 'tramp)
+  (if (not (tramp-tramp-file-p file))
+      file
+    (tramp-file-name-localname (tramp-dissect-file-name file))))
+
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files using external diff. Returns t if equal"
-  (let ((diff-output (shell-command-to-string (concat "diff -q" " " file1 " " file2))))
+  (let* ((file1-untrampified (ztree-diff-untrampify-filename file1))
+         (file2-untrampified (ztree-diff-untrampify-filename file2))
+         (diff-command (concat "diff -q" " " file1-untrampified " " file2-untrampified))
+         (diff-output (shell-command-to-string diff-command)))
     (not (> (length diff-output) 2))))
-
 
 (defun ztree-directory-files (dir)
   "Returns the list of full paths of files in a directory, filtering out . and .."
