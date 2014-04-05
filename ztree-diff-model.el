@@ -112,10 +112,13 @@
       file
     (tramp-file-name-localname (tramp-dissect-file-name file))))
 
+(defun ztree-diff-modef-quotify-string (x)
+  (concat "\"" x "\""))
+
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files using external diff. Returns t if equal"
-  (let* ((file1-untrampified (ztree-diff-untrampify-filename file1))
-         (file2-untrampified (ztree-diff-untrampify-filename file2))
+  (let* ((file1-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file1)))
+         (file2-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file2)))
          (diff-command (concat "diff -q" " " file1-untrampified " " file2-untrampified))
          (diff-output (shell-command-to-string diff-command)))
     (not (> (length diff-output) 2))))
