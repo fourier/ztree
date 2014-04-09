@@ -460,7 +460,7 @@ list of leafs"
                                     (1- (+ num-of-items ztree-start-line))
                                     (/ width 2)
                                     'vertical-border)
-          (ztree-draw-tree tree 0 (/ width 2))))))
+          (ztree-draw-tree tree 0 (1+ (/ width 2)))))))
 
 
 (defun ztree-insert-node-contents-1 (node depth)
