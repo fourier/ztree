@@ -3,12 +3,13 @@ ztree
 
 Ztree is a project dedicated to implementation of several text-tree applications inside Emacs. It consists of 2 subprojects: **ztree-diff** and **ztree-dir**(the basis of **ztree-diff**). Available in MELPA (http://melpa.milkbox.net/#/).
 
-
 ztree-diff
 ==========
 **ztree-diff** is a directory-diff tool for Emacs inspired by commercial tools like Beyond Compare or Araxis Merge. It supports showing the difference between two directories; calling **Ediff** for not matching files, copying between directories, deleting file/directories, hiding/showing equal files/directories.
 
 The comparison itself performed with the external **GNU diff** tool, so make sure to have one in the executable path. Verified on OSX and Linux.
+
+If one wants to have a stand-alone application, consider the (WIP)[zdircmp](https://github.com/fourier/zdircmp) project based on **ztree-diff**.
 
 Add the following to your .emacs file:
 
