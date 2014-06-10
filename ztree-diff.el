@@ -69,8 +69,9 @@ including . and ..")
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
 
 
-(defvar ztree-diff-filter-list nil
-  "List of regexp file names to filter out")
+(defvar ztree-diff-filter-list (list ztree-diff-hidden-files-regexp)
+  "List of regexp file names to filter out. By default paths starting with
+dot (like .git) are ignored")
 (make-variable-buffer-local 'ztree-diff-filter-list)
 
 (defvar ztree-diff-dirs-pair nil
@@ -413,7 +414,6 @@ apparently shall not be visible"
                            " <--> "
                            (ztree-diff-node-right-short-name difference)
                            "*")))
-    (setq ztree-diff-filter-list (list ztree-diff-hidden-files-regexp))
     (ztree-view buf-name
                 difference
                 'ztree-node-is-visible
