@@ -86,7 +86,7 @@ Used for 2-side trees, to determine if the node exists on left or right
 or both sides")
 (make-variable-buffer-local 'ztree-line-tree-properties)
 
-(defun ztree-tree-header-fun nil
+(defvar ztree-tree-header-fun nil
   "Function inserting the header into the tree buffer.
 MUST inster newline at the end!")
 (make-variable-buffer-local 'ztree-tree-header-fun)
@@ -96,30 +96,30 @@ MUST inster newline at the end!")
 the node")
 (make-variable-buffer-local 'ztree-node-short-name-fun)
 
-(defun ztree-node-is-expandable-fun nil
+(defvar ztree-node-is-expandable-fun nil
   "Function which determines if the node is expandable,
 for example if the node is a directory")
 (make-variable-buffer-local 'ztree-node-is-expandable-fun)
 
-(defun ztree-node-equal-fun nil
+(defvar ztree-node-equal-fun nil
   "Function which determines if the 2 nodes are equal")
 (make-variable-buffer-local 'ztree-node-equal-fun)
 
-(defun ztree-node-contents-fun nil
+(defvar ztree-node-contents-fun nil
   "Function returning list of node contents")
 (make-variable-buffer-local 'ztree-node-contents-fun)
 
-(defun ztree-node-side-fun nil
+(defvar ztree-node-side-fun nil
   "Function returning position of the node: 'left, 'right or 'both.
 If not defined(by default) - using single screen tree, otherwise
 the buffer is split to 2 trees")
 (make-variable-buffer-local 'ztree-node-side-fun)
 
-(defun ztree-node-face-fun nil
+(defvar ztree-node-face-fun nil
   "Function returning face for the node")
 (make-variable-buffer-local 'ztree-node-face-fun)
 
-(defun ztree-node-action-fun nil
+(defvar ztree-node-action-fun nil
   "Function called when Enter/Space pressed on the node")
 (make-variable-buffer-local 'ztree-node-action-fun)
 
