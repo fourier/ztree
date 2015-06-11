@@ -1,28 +1,29 @@
 ;;; ztree-view.el --- Text mode tree view (buffer)
 
-;; Copyright (C) 2013 Alexey Veretennikov
+;; Copyright (C) 2015  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
+;; 
 ;; Created: 2013-11-1l
-;; Version: 1.0.1
-;; Keywords: files
+;;
+;; Keywords: files tools
 ;; URL: https://github.com/fourier/ztree
 ;; Compatibility: GNU Emacs GNU Emacs 24.x
 ;;
-;; This file is NOT part of GNU Emacs.
+;; This file is part of GNU Emacs.
 ;;
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License
-;; as published by the Free Software Foundation; either version 2
-;; of the License, or (at your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 ;;
-;; This program is distributed in the hope that it will be useful,
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;;; Commentary:
 ;;
@@ -38,11 +39,6 @@
 ;;
 ;;; TODO:
 ;;
-;;
-;;; Change Log:
-;;
-;; 2013-11-10 (1.0.0)
-;;    Initial Release.
 ;;
 ;;; Code:
 
