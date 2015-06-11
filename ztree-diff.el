@@ -31,8 +31,8 @@
 (require 'ztree-diff-model)
 
 (defconst ztree-diff-hidden-files-regexp "^\\."
-  "Hidden files regexp. By default all filest starting with dot '.',
-including . and ..")
+  "Hidden files regexp.
+By default all filest starting with dot '.', including . and ..")
 
 (defface ztreep-diff-header-face
   '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
@@ -70,16 +70,16 @@ including . and ..")
 
 
 (defvar ztree-diff-filter-list (list ztree-diff-hidden-files-regexp)
-  "List of regexp file names to filter out. By default paths starting with
-dot (like .git) are ignored")
+  "List of regexp file names to filter out.
+By default paths starting with dot (like .git) are ignored")
 (make-variable-buffer-local 'ztree-diff-filter-list)
 
 (defvar ztree-diff-dirs-pair nil
-  "Pair of the directories stored. Used to perform the full rescan")
+  "Pair of the directories stored.  Used to perform the full rescan.")
 (make-variable-buffer-local 'ztree-diff-dirs-pair)
 
 (defvar ztree-diff-show-equal-files t
-  "Show or not equal files/directories on both sides")
+  "Show or not equal files/directories on both sides.")
 (make-variable-buffer-local 'ztree-diff-show-equal-files)
 
 ;;;###autoload
@@ -101,12 +101,14 @@ dot (like .git) are ignored")
 
 
 (defun ztree-diff-node-face (node)
+  "Return the face for the NODE depending on diff status."
   (let ((diff (ztree-diff-node-different node)))
     (cond ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
-          (t ztreep-diff-model-normal-face))))  
+          (t ztreep-diff-model-normal-face))))
 
 (defun ztree-diff-insert-buffer-header ()
+  "Insert the header to the ztree buffer."
   (insert-with-face "Differences tree" ztreep-diff-header-face)
   (newline-and-begin)
   (when ztree-diff-dirs-pair
@@ -131,7 +133,7 @@ dot (like .git) are ignored")
   (newline-and-begin))
 
 (defun ztree-diff-full-rescan ()
-  "Forces full rescan of the directory trees"
+  "Force full rescan of the directory trees."
   (interactive)
   (when (and ztree-diff-dirs-pair
              (yes-or-no-p (format "Force full rescan?")))
@@ -140,6 +142,7 @@ dot (like .git) are ignored")
 
 
 (defun ztree-diff-existing-common (node)
+  "Return the NODE if both left and right sides exist."
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
     (if (and left right
@@ -149,12 +152,14 @@ dot (like .git) are ignored")
       nil)))
       
 (defun ztree-diff-existing-common-parent (node)
+  "Return the first node in up in hierarchy of the NODE which has both sides."
   (let ((common (ztree-diff-existing-common node)))
     (if common
         common
       (ztree-diff-existing-common-parent (ztree-diff-node-parent node)))))
 
 (defun ztree-diff-do-partial-rescan (node)
+  "Partly rescan the NODE."
   (let* ((common (ztree-diff-existing-common-parent node))
          (parent (ztree-diff-node-parent common)))
     (if (not parent)
@@ -167,7 +172,7 @@ dot (like .git) are ignored")
   
 
 (defun ztree-diff-partial-rescan ()
-  "Performs partial rescan on the current node"
+  "Perform partial rescan on the current node."
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
@@ -175,7 +180,8 @@ dot (like .git) are ignored")
   
 
 (defun ztree-diff-simple-diff (node)
-  "Create a simple diff buffer for files from left and right panels"
+  "Create a simple diff buffer for files from left and right panels.
+Argument NODE node containing paths to files to call a diff on."
   (let* ((node-left (ztree-diff-node-left-path node))
          (node-right (ztree-diff-node-right-path node)))
     (when (and
@@ -189,7 +195,7 @@ dot (like .git) are ignored")
 
 
 (defun ztree-diff-simple-diff-files ()
-  "Create a simple diff buffer for files from left and right panels"
+  "Create a simple diff buffer for files from left and right panels."
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
@@ -197,10 +203,10 @@ dot (like .git) are ignored")
         (ztree-diff-simple-diff node)))))
 
 (defun ztree-diff-node-action (node hard)
-  "Perform action on node:
+  "Perform action on NODE:
 1 if both left and right sides present:
    1.1 if they are differend
-      1.1.1 if hard ediff
+      1.1.1 if HARD ediff
       1.1.2 simple diff otherwiste
    1.2 if they are the same - view left
 2 if left or right present - view left or rigth"
@@ -222,6 +228,9 @@ dot (like .git) are ignored")
 
 
 (defun ztree-diff-copy-file (node source-path destination-path copy-to-right)
+  "Update the NODE status and copy the file.
+File copied from SOURCE-PATH to DESTINATION-PATH.
+COPY-TO-RIGHT specifies which side of the NODE to update."
   (let ((target-path (concat
                       (file-name-as-directory destination-path)
                       (file-name-nondirectory
@@ -248,6 +257,9 @@ dot (like .git) are ignored")
 
 
 (defun ztree-diff-copy-dir (node source-path destination-path copy-to-right)
+    "Update the NODE status and copy the directory.
+Directory copied from SOURCE-PATH to DESTINATION-PATH.
+COPY-TO-RIGHT specifies which side of the NODE to update."
   (let* ((src-path (file-name-as-directory source-path))
          (target-path (file-name-as-directory destination-path))
          (target-full-path (concat
@@ -276,6 +288,7 @@ dot (like .git) are ignored")
 
 
 (defun ztree-diff-copy ()
+  "Copy the file under the cursor to other side."
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
@@ -321,7 +334,7 @@ dot (like .git) are ignored")
                                     copy-to-right))))))))
 
 (defun ztree-diff-view-file ()
-  "View file at point, depending on side"
+  "View file at point, depending on side."
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
@@ -341,6 +354,7 @@ dot (like .git) are ignored")
   
 
 (defun ztree-diff-delete-file ()
+  "Delete the file under the cursor."
   (interactive)
   (let ((found (ztree-find-node-at-point)))
     (when found
@@ -365,19 +379,19 @@ dot (like .git) are ignored")
           (when (yes-or-no-p (format "Delete the file [%s]%s ?"
                                      (if delete-from-left "LEFT" "RIGHT")
                                      remove-path))
-            (let* ((delete-command 
+            (let* ((delete-command
                     (if (file-directory-p remove-path)
                         '(delete-directory remove-path t)
                       '(delete-file remove-path t)))
                    (children (ztree-diff-node-children parent))
-                   (err 
+                   (err
                     (condition-case error-trap
                         (progn
                           (eval delete-command)
                           nil)
                       (error error-trap))))
               (if err (message (concat "Error: " (nth 2 err)))
-                (progn 
+                (progn
                   (setq children (ztree-filter
                                   #'(lambda (x) (not (ztree-diff-node-equal x node)))
                                   children))
@@ -388,25 +402,29 @@ dot (like .git) are ignored")
 
 
 (defun ztree-node-is-in-filter-list (node)
-  "Determine if the node is in filter list (and therefore
-apparently shall not be visible"
+  "Determine if the NODE is in filter list.
+If the node is in the filter list it shall not be visible"
   (ztree-find ztree-diff-filter-list #'(lambda (rx) (string-match rx node))))
 
 
 (defun ztree-node-is-visible (node)
+  "Determine if the NODE should be visible."
   (and (ztree-diff-node-parent node)    ; parent is always visible
        (not (ztree-node-is-in-filter-list (ztree-diff-node-short-name node)))
        (or ztree-diff-show-equal-files
            (ztree-diff-node-different node))))
 
 (defun ztree-diff-toggle-show-equal-files ()
+  "Toggle visibility of the equal files."
   (interactive)
   (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
   (ztree-refresh-buffer))
 
 ;;;###autoload
 (defun ztree-diff (dir1 dir2)
-  "Creates an interactive buffer with the directory tree of the path given"
+  "Create an interactive buffer with the directory tree of the path given.
+Argument DIR1 left directory.
+Argument DIR2 right directory."
   (interactive "DLeft directory \nDRight directory ")
   (let* ((difference (ztree-diff-model-create dir1 dir2))
          (buf-name (concat "*"

@@ -28,7 +28,7 @@
 
 ;;; Code:
 (defun ztree-find (where which)
-  "find element of the list `where` matching predicate `which`"
+  "Find element of the list WHERE matching predicate WHICH."
   (catch 'found
     (dolist (elt where)
       (when (funcall which elt)
@@ -36,34 +36,36 @@
     nil))
 
 (defun ztree-filter (condp lst)
-  "Filter out elements of the list `lst` not satisfying predicate `condp`.
+  "Filter out elements not satisfying predicate CONDP in the list LST.
 Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
   (delq nil
         (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
 
 (defun printable-string (string)
-  "Strip newline character from file names, like 'Icon\n'"
-  (replace-regexp-in-string "\n" "" string))  
+  "Strip newline character from file names, like 'Icon\n.
+Argument STRING string to process.'."
+  (replace-regexp-in-string "\n" "" string))
 
 (defun file-short-name (file)
-  "Base file/directory name. Taken from
- http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
+  "By given FILE name return base file/directory name.
+Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
   (printable-string (file-name-nondirectory (directory-file-name file))))
 
 
 (defun newline-and-begin ()
+  "Move a point to the beginning of the next line."
   (newline)
   (beginning-of-line))
 
 (defun car-atom (value)
-  "Returns value if value is an atom, otherwise (car value) or nil.
-Used since car-safe returns nil for atoms"
+  "Return VALUE if value is an atom, otherwise (car value) or nil.
+Used since `car-safe' returns nil for atoms"
   (if (atom value) value (car value)))
 
 
 (defun insert-with-face (text face)
-  "Insert text with the face provided"
+  "Insert TEXT with the FACE provided."
   (let ((start (point)))
     (insert text)
     (put-text-property start (point) 'face face)))
@@ -73,8 +75,8 @@ Used since car-safe returns nil for atoms"
   "Create a record (structure) and getters/setters.
 
 Record is the following set of functions:
- - Record constructor with name \"record-name\"-create and list of
-arguments which will be assigned to record-fields
+ - Record constructor with name \"RECORD-NAME\"-create and list of
+arguments which will be assigned to RECORD-FIELDS
  - Record getters with names \"record-name\"-\"field\" accepting one
 argument - the record; \"field\" is from \"record-fields\" symbols
  - Record setters with names \"record-name\"-set-\"field\" accepting two
@@ -97,7 +99,7 @@ will be expanded to the following functions:
        ;; with arguments list "record-fields" expanded
        (defun ,ctor-name (,@record-fields)
          (let ((,rec-var))
-           ,@(mapcar #'(lambda (x) 
+           ,@(mapcar #'(lambda (x)
                       (list 'setq rec-var (list 'plist-put rec-var (list 'quote x) x)))
                     record-fields)))
        ;; getters with names "record-name-field" where the "field"

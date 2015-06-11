@@ -56,8 +56,8 @@
 ;;
 
 (defconst ztree-hidden-files-regexp "^\\."
-  "Hidden files regexp. By default all filest starting with dot '.',
-including . and ..")
+  "Hidden files regexp.
+By default all filest starting with dot '.', including . and ..")
 
 
 ;;
@@ -78,6 +78,7 @@ including . and ..")
 ;;
 
 (defun ztree-insert-buffer-header ()
+  "Insert the header to the ztree buffer."
   (let ((start (point)))
     (insert "Directory tree")
     (newline-and-begin)
@@ -86,11 +87,12 @@ including . and ..")
   (newline-and-begin))
 
 (defun ztree-file-not-hidden (filename)
+  "Determines if the file with FILENAME should be visible."
   (not (string-match ztree-hidden-files-regexp
                      (file-short-name filename))))
 
 (defun ztree-find-file (node hard)
-  "Finds the file at NODE.
+  "Find the file at NODE.
 
 If HARD is non-nil, the file is opened in another window.
 Otherwise, the ztree window is used to find the file."
@@ -101,7 +103,7 @@ Otherwise, the ztree window is used to find the file."
 
 ;;;###autoload
 (defun ztree-dir (path)
-  "Creates an interactive buffer with the directory tree of the path given"
+  "Create an interactive buffer with the directory tree of the PATH given."
   (interactive "DDirectory: ")
   (when (and (file-exists-p path) (file-directory-p path))
     (let ((buf-name (concat "*Directory " path " tree*")))
