@@ -1,6 +1,6 @@
 ;;; ztree-dir.el --- Text mode directory tree
 
-;; Copyright (C) 2015  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
 ;; 
