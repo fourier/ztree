@@ -8,7 +8,7 @@
 ;;
 ;; Keywords: files tools
 ;; URL: https://github.com/fourier/ztree
-;; Compatibility: GNU Emacs GNU Emacs 24.x
+;; Compatibility: GNU Emacs 24.x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
