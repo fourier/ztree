@@ -176,15 +176,7 @@ the buffer is split to 2 trees")
 (define-derived-mode ztree-mode special-mode "Ztree"
   "A major mode for displaying the directory tree in text mode."
   ;; only spaces
-  (setq indent-tabs-mode nil)
-  ;; fix for electric-indent-mode
-  ;; for emacs 24.4
-  (if (fboundp 'electric-indent-local-mode)
-      (electric-indent-local-mode -1)
-    ;; for emacs 24.3 or less
-    (add-hook 'electric-indent-functions
-              (lambda (arg) 'no-indent) nil 'local)))
-
+  (setq indent-tabs-mode nil))
 
 (defun ztree-find-node-in-line (line)
   "Return the node for the LINE specified.
