@@ -1,4 +1,4 @@
-;;; ztree-diff-model.el --- diff model for directory trees
+;;; ztree-diff-model.el --- diff model for directory trees -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
 ;;
@@ -79,7 +79,7 @@
             "\n"
             " * Children: " ch-str
             "\n")))
-                          
+
 
 (defun ztree-diff-node-short-name-wrapper (node &optional right-side)
   "Return the short name of the NODE given.
@@ -157,12 +157,12 @@ Filters out . and .."
                (file-exists-p left)
                (file-exists-p right))
       (if isdir
-        (let ((traverse (ztree-diff-node-traverse
-                         node
-                         left
-                         right)))
-          (ztree-diff-node-set-different node (car traverse))
-          (ztree-diff-node-set-children node (cdr traverse)))
+          (let ((traverse (ztree-diff-node-traverse
+                           node
+                           left
+                           right)))
+            (ztree-diff-node-set-different node (car traverse))
+            (ztree-diff-node-set-children node (cdr traverse)))
         ;; node is a file
         (ztree-diff-node-set-different
          node
@@ -341,7 +341,7 @@ the rest is the combined list of nodes."
     (ztree-diff-node-set-children node (cdr traverse))
     (ztree-diff-node-set-different node (car traverse))
     (message "Done.")))
-    
+
 
 
 (provide 'ztree-diff-model)

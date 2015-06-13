@@ -1,4 +1,4 @@
-;;; ztree-view.el --- Text mode tree view (buffer)
+;;; ztree-view.el --- Text mode tree view (buffer) -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
 ;;
@@ -191,7 +191,7 @@ or nil if there is no node"
         (node (ztree-find-node-in-line (line-number-at-pos))))
     (when node
       (cons node (if (> (current-column) center) 'right 'left)))))
-  
+
 
 (defun ztree-is-expanded-node (node)
   "Find if the NODE is in the list of expanded nodes."
@@ -225,7 +225,7 @@ Argument STATE node state."
       (dolist (child children)
         (ztree-do-toggle-expand-subtree-iter child state)))))
 
-     
+
 (defun ztree-do-toggle-expand-subtree ()
   "Implements the subtree expand."
   (let* ((line (line-number-at-pos))
@@ -241,7 +241,7 @@ Argument STATE node state."
       (ztree-refresh-buffer line)
       ;; restore window start position
       (set-window-start (selected-window) current-pos))))
-          
+
 
 (defun ztree-do-perform-action (hard)
   "Toggle expand/collapsed state for nodes or perform an action.
@@ -262,7 +262,7 @@ should be performed on node."
         (ztree-refresh-buffer line)
         ;; restore window start position
         (set-window-start (selected-window) current-pos)))))
-  
+
 
 (defun ztree-perform-action ()
   "Toggle expand/collapsed state for nodes or perform the action.
@@ -291,7 +291,7 @@ Performs the soft action, binded on Space, on node."
              ztree-expanded-nodes-list))
     (push node ztree-expanded-nodes-list)))
 
-   
+
 (defun ztree-toggle-expand-state (node)
   "Toggle expanded/collapsed state for NODE."
   (ztree-do-toggle-expand-state node (not (ztree-is-expanded-node node))))
@@ -322,15 +322,15 @@ then close the node."
 Argument NODE node which contents will be returned."
   (let ((nodes (funcall ztree-node-contents-fun node))
         (comp  #'(lambda (x y)
-                 (string< (funcall ztree-node-short-name-fun x)
-                          (funcall ztree-node-short-name-fun y)))))
+                   (string< (funcall ztree-node-short-name-fun x)
+                            (funcall ztree-node-short-name-fun y)))))
     (cons (sort (ztree-filter
                  #'(lambda (f) (funcall ztree-node-is-expandable-fun f))
                  nodes) comp)
           (sort (ztree-filter
                  #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f)))
                  nodes) comp))))
-                
+
 
 (defun ztree-draw-char (c x y &optional face)
   "Draw char C at the position (1-based) (X Y).
@@ -497,7 +497,7 @@ Argument PATH start node."
           (when (funcall ztree-node-showp-fun leaf)
             ;; insert the leaf and add it to children
             (push (ztree-insert-entry leaf (1+ depth) nil)
-                    children)))))
+                  children)))))
     ;; result value is the list - head is the root line,
     ;; rest are children
     (cons root-line children)))

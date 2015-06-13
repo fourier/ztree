@@ -1,4 +1,4 @@
-;;; ztree-dir.el --- Text mode directory tree
+;;; ztree-dir.el --- Text mode directory tree -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
 ;;

@@ -1,4 +1,4 @@
-;;; ztree-util.el --- Auxulary utilities for the ztree package
+;;; ztree-util.el --- Auxulary utilities for the ztree package -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
 ;;
@@ -100,19 +100,19 @@ To test expansion one can use GNU Emacs's pp library:
        (defun ,ctor-name (,@record-fields)
          (let ((,rec-var))
            ,@(mapcar #'(lambda (x)
-                      (list 'setq rec-var (list 'plist-put rec-var (list 'quote x) x)))
-                    record-fields)))
+                         (list 'setq rec-var (list 'plist-put rec-var (list 'quote x) x)))
+                     record-fields)))
        ;; getters with names "record-name-field" where the "field"
        ;; is from record-fields
        ,@(mapcar #'(lambda (x)
-                    (let ((getter-name (intern (concat (symbol-name record-name)
-                                                       "-"
-                                                       (symbol-name x)))))
-                      `(progn
-                         (defun ,getter-name (,rec-var)
-                           (plist-get ,rec-var ',x)
-                           ))))
-                record-fields)
+                     (let ((getter-name (intern (concat (symbol-name record-name)
+                                                        "-"
+                                                        (symbol-name x)))))
+                       `(progn
+                          (defun ,getter-name (,rec-var)
+                            (plist-get ,rec-var ',x)
+                            ))))
+                 record-fields)
        ;; setters wit names "record-name-set-field where the "field"
        ;; is from record-fields
        ;; arguments for setters: (record value)

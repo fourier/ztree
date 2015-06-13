@@ -1,4 +1,4 @@
-;;; ztree-diff.el --- Text mode diff for directory trees
+;;; ztree-diff.el --- Text mode diff for directory trees -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
 ;;
@@ -114,10 +114,10 @@ By default paths starting with dot (like .git) are ignored")
   (insert "\n")
   (when ztree-diff-dirs-pair
     (ztree-insert-with-face (concat "Left:  " (car ztree-diff-dirs-pair))
-                      ztreep-diff-header-small-face)
+                            ztreep-diff-header-small-face)
     (insert "\n")
     (ztree-insert-with-face (concat "Right: " (cdr ztree-diff-dirs-pair))
-                      ztreep-diff-header-small-face)
+                            ztreep-diff-header-small-face)
     (insert "\n"))
   (ztree-insert-with-face "Legend:" ztreep-diff-header-small-face)
   (insert "\n")
@@ -151,7 +151,7 @@ By default paths starting with dot (like .git) are ignored")
              (file-exists-p right))
         node
       nil)))
-      
+
 (defun ztree-diff-existing-common-parent (node)
   "Return the first node in up in hierarchy of the NODE which has both sides."
   (let ((common (ztree-diff-existing-common node)))
@@ -170,7 +170,7 @@ By default paths starting with dot (like .git) are ignored")
         (ztree-diff-model-partial-rescan common)
         (ztree-diff-node-update-all-parents-diff node)
         (ztree-refresh-buffer (line-number-at-pos))))))
-  
+
 
 (defun ztree-diff-partial-rescan ()
   "Perform partial rescan on the current node."
@@ -178,7 +178,7 @@ By default paths starting with dot (like .git) are ignored")
   (let ((found (ztree-find-node-at-point)))
     (when found
       (ztree-diff-do-partial-rescan (car found)))))
-  
+
 
 (defun ztree-diff-simple-diff (node)
   "Create a simple diff buffer for files from left and right panels.
@@ -213,7 +213,7 @@ Argument NODE node containing paths to files to call a diff on."
 2 if left or right present - view left or rigth"
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node))
-        (open-f '(lambda (path) (if hard (find-file path)
+        (open-f #'(lambda (path) ((insert )f hard (find-file path)
                                   (let ((split-width-threshold nil))
                                     (view-file-other-window path))))))
     (cond ((and left right)
@@ -225,7 +225,7 @@ Argument NODE node containing paths to files to call a diff on."
           (left (funcall open-f left))
           (right (funcall open-f right))
           (t nil))))
-           
+
 
 
 (defun ztree-diff-copy-file (node source-path destination-path copy-to-right)
@@ -258,7 +258,7 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
 
 
 (defun ztree-diff-copy-dir (node source-path destination-path copy-to-right)
-    "Update the NODE status and copy the directory.
+  "Update the NODE status and copy the directory.
 Directory copied from SOURCE-PATH to DESTINATION-PATH.
 COPY-TO-RIGHT specifies which side of the NODE to update."
   (let* ((src-path (file-name-as-directory source-path))
@@ -352,7 +352,7 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                 ((and (eq side 'right)
                       node-right)
                  (view-file node-right))))))))
-  
+
 
 (defun ztree-diff-delete-file ()
   "Delete the file under the cursor."
@@ -447,7 +447,7 @@ Argument DIR2 right directory."
     (ztreediff-mode)
     (setq ztree-diff-dirs-pair (cons dir1 dir2))
     (ztree-refresh-buffer)))
-          
+
 
 
 
