@@ -54,6 +54,14 @@
   "Hidden files regexp.
 By default all filest starting with dot '.', including . and ..")
 
+;;
+;; Configurable variables
+;; 
+
+(defvar ztree-dir-move-focus nil
+  "If set to true moves the focus to opened window when the
+user press RETURN on file ")t
+
 
 ;;
 ;; Faces
@@ -92,9 +100,12 @@ By default all filest starting with dot '.', including . and ..")
 If HARD is non-nil, the file is opened in another window.
 Otherwise, the ztree window is used to find the file."
   (when (and (stringp node) (file-readable-p node))
-    (if hard
-        (save-selected-window (find-file-other-window node))
-      (find-file node))))
+    (cond ((and hard ztree-dir-move-focus)
+           (find-file-other-window node))
+          (hard
+           (save-selected-window (find-file-other-window node)))
+          (t 
+           (find-file node)))))
 
 ;;;###autoload
 (defun ztree-dir (path)
