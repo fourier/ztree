@@ -45,7 +45,7 @@
 
 
 
-;; Create a record ztree-diff-node with defined fielsd and getters/setters
+;; Create a record ztree-diff-node with defined fields and getters/setters
 ;; here:
 ;; parent - parent node
 ;; left-path is the full path on the left side of the diff window,
@@ -53,7 +53,7 @@
 ;; short-name - is the file or directory name
 ;; children - list of nodes - files or directories if the node is a directory
 ;; different = {nil, 'new, 'diff} - means comparison status
-(defrecord ztree-diff-node (parent left-path right-path short-name right-short-name children different))
+(ztree-defrecord ztree-diff-node (parent left-path right-path short-name right-short-name children different))
 
 (defun ztree-diff-node-to-string (node)
   "Construct the string with contents of the NODE given."
@@ -139,7 +139,7 @@ Returns t if equal."
 (defun ztree-directory-files (dir)
   "Return the list of full paths of files in a directory DIR.
 Filters out . and .."
-  (ztree-filter #'(lambda (file) (let ((simple-name (file-short-name file)))
+  (ztree-filter #'(lambda (file) (let ((simple-name (ztree-file-short-name file)))
                                    (not (or (string-equal simple-name ".")
                                             (string-equal simple-name "..")))))
                 (directory-files dir 'full)))
@@ -181,8 +181,8 @@ Argument SIDE either 'left or 'right side."
                         parent
                         (when (eq side 'left) file)
                         (when (eq side 'right) file)
-                        (file-short-name file)
-                        (file-short-name file)
+                        (ztree-file-short-name file)
+                        (ztree-file-short-name file)
                         nil
                         'new))
                  (children (ztree-diff-model-subtree node file side)))
@@ -192,8 +192,8 @@ Argument SIDE either 'left or 'right side."
                parent
                (when (eq side 'left) file)
                (when (eq side 'right) file)
-               (file-short-name file)
-               (file-short-name file)
+               (ztree-file-short-name file)
+               (ztree-file-short-name file)
                nil
                'new)
               result)))
@@ -240,7 +240,7 @@ the rest is the combined list of nodes."
     (dolist (file1 list1)
       ;; for every entry in the first directory
       ;; we are creating the node
-      (let* ((simple-name (file-short-name file1))
+      (let* ((simple-name (ztree-file-short-name file1))
              (isdir (file-directory-p file1))
              (children nil)
              (different nil)
@@ -250,7 +250,7 @@ the rest is the combined list of nodes."
              ;; 1. find if the file is in the second directory and the type
              ;;    is the same - i.e. both are directories or both are files
              (file2 (ztree-find list2
-                                #'(lambda (x) (and (string-equal (file-short-name x)
+                                #'(lambda (x) (and (string-equal (ztree-file-short-name x)
                                                                  simple-name)
                                                    (eq isdir (file-directory-p x)))))))
         ;; 2. if it is not in the second directory, add it as a node
@@ -287,7 +287,7 @@ the rest is the combined list of nodes."
     (dolist (file2 list2)
       ;; for every entry in the second directory
       ;; we are creating the node
-      (let* ((simple-name (file-short-name file2))
+      (let* ((simple-name (ztree-file-short-name file2))
              (isdir (file-directory-p file2))
              (children nil)
              ;; create the node to be added to the results list
@@ -295,7 +295,7 @@ the rest is the combined list of nodes."
              ;; 1. find if the file is in the first directory and the type
              ;;    is the same - i.e. both are directories or both are files
              (file1 (ztree-find list1
-                                #'(lambda (x) (and (string-equal (file-short-name x)
+                                #'(lambda (x) (and (string-equal (ztree-file-short-name x)
                                                                  simple-name)
                                                    (eq isdir (file-directory-p x)))))))
         ;; if it is not in the first directory, add it as a node
@@ -321,8 +321,8 @@ the rest is the combined list of nodes."
   (setq ztree-diff-model-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
   (let* ((model
           (ztree-diff-node-create nil dir1 dir2
-                                  (file-short-name dir1)
-                                  (file-short-name dir2)
+                                  (ztree-file-short-name dir1)
+                                  (ztree-file-short-name dir2)
                                   nil
                                   nil))
          (traverse (ztree-diff-node-traverse model dir1 dir2)))

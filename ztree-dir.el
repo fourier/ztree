@@ -84,15 +84,15 @@ user press RETURN on file ")t
   "Insert the header to the ztree buffer."
   (let ((start (point)))
     (insert "Directory tree")
-    (newline-and-begin)
+    (insert "\n")
     (insert "==============")
     (set-text-properties start (point) '(face ztreep-header-face)))
-  (newline-and-begin))
+  (insert "\n"))
 
 (defun ztree-file-not-hidden (filename)
   "Determines if the file with FILENAME should be visible."
   (not (string-match ztree-hidden-files-regexp
-                     (file-short-name filename))))
+                     (ztree-file-short-name filename))))
 
 (defun ztree-find-file (node hard)
   "Find the file at NODE.
@@ -117,7 +117,7 @@ Otherwise, the ztree window is used to find the file."
                   (expand-file-name (substitute-in-file-name path))
                   'ztree-file-not-hidden
                   'ztree-insert-buffer-header
-                  'file-short-name
+                  'ztree-file-short-name
                   'file-directory-p
                   'string-equal
                   '(lambda (x) (directory-files x 'full))

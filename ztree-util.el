@@ -43,36 +43,30 @@ Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
         (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
 
-(defun printable-string (string)
+(defun ztree-printable-string (string)
   "Strip newline character from file names, like 'Icon\n.
 Argument STRING string to process.'."
   (replace-regexp-in-string "\n" "" string))
 
-(defun file-short-name (file)
+(defun ztree-file-short-name (file)
   "By given FILE name return base file/directory name.
 Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (printable-string (file-name-nondirectory (directory-file-name file))))
+  (ztree-printable-string (file-name-nondirectory (directory-file-name file))))
 
-
-(defun newline-and-begin ()
-  "Move a point to the beginning of the next line."
-  (insert "\n")
-  (beginning-of-line))
-
-(defun car-atom (value)
+(defun ztree-car-atom (value)
   "Return VALUE if value is an atom, otherwise (car value) or nil.
 Used since `car-safe' returns nil for atoms"
   (if (atom value) value (car value)))
 
 
-(defun insert-with-face (text face)
+(defun ztree-insert-with-face (text face)
   "Insert TEXT with the FACE provided."
   (let ((start (point)))
     (insert text)
     (put-text-property start (point) 'face face)))
 
 
-(defmacro defrecord (record-name record-fields)
+(defmacro ztree-defrecord (record-name record-fields)
   "Create a record (structure) and getters/setters.
 
 Record is the following set of functions:
@@ -84,7 +78,7 @@ argument - the record; \"field\" is from \"record-fields\" symbols
 arguments - the record and the field value
 
 Example:
-\(defrecord person (name age))
+\(ztree-defrecord person (name age))
 
 will be expanded to the following functions:
 
@@ -92,7 +86,12 @@ will be expanded to the following functions:
 \(defun person-name (record) (...)
 \(defun person-age (record) (...)
 \(defun person-set-name (record value) (...)
-\(defun person-set-age (record value) (...)"
+\(defun person-set-age (record value) (...)
+
+To test expansion one can use GNU Emacs's pp library:
+\(require 'pp)
+\(pp-macroexpand-expression
+ '(ztree-defrecord person (name age)))"
   (let ((ctor-name (intern (concat (symbol-name record-name) "-create")))
         (rec-var (make-symbol "record")))
     `(progn
