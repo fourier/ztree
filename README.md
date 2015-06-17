@@ -1,5 +1,5 @@
 # ztree
-Ztree is a project dedicated to implementation of several text-tree applications inside GNU Emacs. It consists of 2 subprojects: **ztree-diff** and **ztree-dir**(the basis of **ztree-diff**). Available in **GNU ELPA** and **MELPA**.
+Ztree is a project dedicated to implementation of several text-tree applications inside [GNU Emacs](http://www.gnu.org/software/emacs/). It consists of 2 subprojects: **ztree-diff** and **ztree-dir** (the basis of **ztree-diff**). Available in [GNU ELPA](https://elpa.gnu.org/) and [MELPA](http://melpa.org/#/).
 
 ## Installation
 
@@ -79,6 +79,7 @@ M-x ztree-dir
 * To visit a file, press `Space` key.
 * To open file in other window, use `RET` key.
 
+### Customizations
 Set the `ztree-dir-move-focus` variable to `t` in order to move focus to the other window when the `RET` key is pressed; the default behavior is to keep focus in `ztree-dir` window.
 
 
