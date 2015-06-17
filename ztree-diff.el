@@ -83,6 +83,9 @@ By default paths starting with dot (like .git) are ignored")
   "Show or not equal files/directories on both sides.")
 (make-variable-buffer-local 'ztree-diff-show-equal-files)
 
+(defvar ztree-diff-show-filtered-files nil
+  "Show or not files from the filtered list.")
+
 ;;;###autoload
 (define-minor-mode ztreediff-mode
   "A minor mode for displaying the difference of the directory trees in text mode."
@@ -94,6 +97,7 @@ By default paths starting with dot (like .git) are ignored")
   `(
     (,(kbd "C") . ztree-diff-copy)
     (,(kbd "h") . ztree-diff-toggle-show-equal-files)
+    (,(kbd "H") . ztree-diff-toggle-show-filtered-files)
     (,(kbd "D") . ztree-diff-delete-file)
     (,(kbd "v") . ztree-diff-view-file)
     (,(kbd "d") . ztree-diff-simple-diff-files)
@@ -382,38 +386,61 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                                      remove-path))
             (let* ((delete-command
                     (if (file-directory-p remove-path)
-                        '(delete-directory remove-path t)
-                      '(delete-file remove-path t)))
+                        #'delete-directory
+                      #'delete-file))
                    (children (ztree-diff-node-children parent))
                    (err
                     (condition-case error-trap
                         (progn
-                          (eval delete-command)
+                          (funcall delete-command remove-path t)
                           nil)
                       (error error-trap))))
-              (if err (message (concat "Error: " (nth 2 err)))
+              (if err
+                  (progn
+                    (message (concat "Error: " (nth 2 err)))
+                    ;; when error happened while deleting the
+                    ;; directory, rescan the node
+                    ;; and update the parents with a new status
+                    ;; of this node
+                    (when (file-directory-p remove-path)
+                      (ztree-diff-model-partial-rescan node)
+                      (ztree-diff-node-update-all-parents-diff node)))
+                ;; if everything ok 
                 (progn
+                  ;; remove the node from children
                   (setq children (ztree-filter
                                   #'(lambda (x) (not (ztree-diff-node-equal x node)))
                                   children))
                   (ztree-diff-node-set-children parent children))
                 (ztree-diff-node-update-all-parents-diff node)
+                ;;(ztree-diff-model-partial-rescan node)
                 (ztree-refresh-buffer (line-number-at-pos))))))))))
 
 
 
-(defun ztree-node-is-in-filter-list (node)
+(defun ztree-diff-node-ignore-p (node)
   "Determine if the NODE is in filter list.
-If the node is in the filter list it shall not be visible"
-  (ztree-find ztree-diff-filter-list #'(lambda (rx) (string-match rx node))))
+If the node is in the filter list it shall not be visible,
+unless it is a parent node."
+  (let ((name (ztree-diff-node-short-name node)))
+    ;; ignore then
+    ;; not a root and is in filter list
+    (and (ztree-diff-node-parent node)
+         (ztree-find ztree-diff-filter-list #'(lambda (rx) (string-match rx name))))))
 
 
 (defun ztree-node-is-visible (node)
   "Determine if the NODE should be visible."
-  (and (ztree-diff-node-parent node)    ; parent is always visible
-       (not (ztree-node-is-in-filter-list (ztree-diff-node-short-name node)))
-       (or ztree-diff-show-equal-files
-           (ztree-diff-node-different node))))
+  ;; visible then
+  ;; 1) either it is a parent
+  (or (not (ztree-diff-node-parent node))    ; parent is always visible
+      (and
+       ;; 2.1) or it is not in ignore list and 
+       (or ztree-diff-show-filtered-files ; show filtered files regardless
+           (not (ztree-diff-node-ignore-p node)))
+       ;; 2.2) it has different status
+       (or ztree-diff-show-equal-files  ; show equal files regardless
+           (ztree-diff-node-different node)))))
 
 (defun ztree-diff-toggle-show-equal-files ()
   "Toggle visibility of the equal files."
@@ -421,13 +448,20 @@ If the node is in the filter list it shall not be visible"
   (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
   (ztree-refresh-buffer))
 
+(defun ztree-diff-toggle-show-filtered-files ()
+  "Toggle visibility of the filtered files."
+  (interactive)
+  (setq ztree-diff-show-filtered-files (not ztree-diff-show-filtered-files))
+  (ztree-refresh-buffer))
+
+
 ;;;###autoload
 (defun ztree-diff (dir1 dir2)
   "Create an interactive buffer with the directory tree of the path given.
 Argument DIR1 left directory.
 Argument DIR2 right directory."
   (interactive "DLeft directory \nDRight directory ")
-  (let* ((difference (ztree-diff-model-create dir1 dir2))
+  (let* ((difference (ztree-diff-model-create dir1 dir2 #'ztree-diff-node-ignore-p))
          (buf-name (concat "*"
                            (ztree-diff-node-short-name difference)
                            " <--> "
