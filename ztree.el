@@ -6,7 +6,7 @@
 ;; 
 ;; Created: 2013-11-1l
 ;;
-;; Version: 1.0.1
+;; Version: 1.0.2
 ;;
 ;; Keywords: files tools
 ;; URL: https://github.com/fourier/ztree
