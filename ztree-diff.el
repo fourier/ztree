@@ -213,7 +213,7 @@ Argument NODE node containing paths to files to call a diff on."
 2 if left or right present - view left or rigth"
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node))
-        (open-f #'(lambda (path) ((insert )f hard (find-file path)
+        (open-f #'(lambda (path) (if hard (find-file path)
                                   (let ((split-width-threshold nil))
                                     (view-file-other-window path))))))
     (cond ((and left right)
