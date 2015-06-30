@@ -138,7 +138,7 @@ RIGHT if only on the right side."
 Returns t if equal."
   (let* ((file1-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file1)))
          (file2-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file2)))
-         (diff-command (concat "diff -q" " " file1-untrampified " " file2-untrampified))
+         (diff-command (concat diff-command "-q" " " file1-untrampified " " file2-untrampified))
          (diff-output (shell-command-to-string diff-command)))
     (not (> (length diff-output) 2))))
 
