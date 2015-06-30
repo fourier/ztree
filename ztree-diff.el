@@ -117,7 +117,7 @@ By default paths starting with dot (like .git) are ignored")
 (defun ztree-diff-node-face (node)
   "Return the face for the NODE depending on diff status."
   (let ((diff (ztree-diff-node-different node)))
-    (cond ((ztree-diff-node-ignore-p node) ztreep-diff-model-ignored-face)
+    (cond ((eq diff 'ignore) ztreep-diff-model-ignored-face)
           ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
           (t ztreep-diff-model-normal-face))))

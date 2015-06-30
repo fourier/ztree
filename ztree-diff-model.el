@@ -205,7 +205,7 @@ Argument SIDE either 'left or 'right side."
 
 (defun ztree-diff-node-update-diff-from-children (node)
   "Set the diff status for the NODE based on its children."
-  ;(unless (eq (ztree-diff-node-different node 'ignore))
+  (unless (eq (ztree-diff-node-different node 'ignore))
     (let ((children (ztree-diff-node-children node))
           (diff nil))
       (dolist (child children)
@@ -214,7 +214,7 @@ Argument SIDE either 'left or 'right side."
                 (ztree-diff-model-update-diff
                  diff
                  (ztree-diff-node-different child)))))
-      (ztree-diff-node-set-different node diff))) ;)
+      (ztree-diff-node-set-different node diff))))
 
 (defun ztree-diff-node-update-all-parents-diff (node)
   "Recursively update all parents diff status for the NODE."
