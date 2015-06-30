@@ -63,8 +63,17 @@ By default all filest starting with dot '.', including . and ..")
   :group 'Ztree-diff :group 'font-lock-highlighting-faces)
 (defvar ztreep-diff-model-add-face 'ztreep-diff-model-add-face)
 
+(defface ztreep-diff-model-ignored-face
+  '((((type tty pc) (class color) (min-colors 256)) :foreground "#2f2f2f")
+    (((type tty pc) (class color) (min-colors 8))   :foreground "white")
+    (t                   (:foreground "#7f7f7f" :strike-through t)))
+  "*Face used for non-modified files in Ztree-diff."
+  :group 'Ztree-diff :group 'font-lock-highlighting-faces)
+(defvar ztreep-diff-model-ignored-face 'ztreep-diff-model-ignored-face)
+
 (defface ztreep-diff-model-normal-face
-  '((t                   (:foreground "#7f7f7f")))
+  '((((type tty pc) (class color) (min-colors 8)) :foreground "white")
+    (t                   (:foreground "#7f7f7f")))
   "*Face used for non-modified files in Ztree-diff."
   :group 'Ztree-diff :group 'font-lock-highlighting-faces)
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
@@ -108,7 +117,8 @@ By default paths starting with dot (like .git) are ignored")
 (defun ztree-diff-node-face (node)
   "Return the face for the NODE depending on diff status."
   (let ((diff (ztree-diff-node-different node)))
-    (cond ((eq diff 'diff) ztreep-diff-model-diff-face)
+    (cond ((ztree-diff-node-ignore-p node) ztreep-diff-model-ignored-face)
+          ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
           (t ztreep-diff-model-normal-face))))
 
