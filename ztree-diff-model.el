@@ -53,7 +53,7 @@
 ;; right-path is the full path of the right side,
 ;; short-name - is the file or directory name
 ;; children - list of nodes - files or directories if the node is a directory
-;; different = {nil, 'new, 'diff} - means comparison status
+;; different = {nil, 'new, 'diff, 'ignore} - means comparison status
 (ztree-defrecord ztree-diff-node (parent left-path right-path short-name right-short-name children different))
 
 (defun ztree-diff-model-ignore-p (node)
@@ -67,6 +67,7 @@
                                           (cond ((stringp x) x)
                                                 ((eq x 'new) "new")
                                                 ((eq x 'diff) "different")
+                                                ((eq x 'ignore) "ignored")
                                                 (t (ztree-diff-node-short-name x)))
                                         "(empty)")))
          (children (ztree-diff-node-children node))
@@ -202,15 +203,16 @@ Argument SIDE either 'left or 'right side."
 
 (defun ztree-diff-node-update-diff-from-children (node)
   "Set the diff status for the NODE based on its children."
-  (let ((children (ztree-diff-node-children node))
-        (diff nil))
-    (dolist (child children)
-      (unless (ztree-diff-model-ignore-p child)
-        (setq diff
-              (ztree-diff-model-update-diff
-               diff
-               (ztree-diff-node-different child)))))
-    (ztree-diff-node-set-different node diff)))
+  (unless (eq (ztree-diff-node-different node 'ignore))
+    (let ((children (ztree-diff-node-children node))
+          (diff nil))
+      (dolist (child children)
+        (unless (ztree-diff-model-ignore-p child)
+          (setq diff
+                (ztree-diff-model-update-diff
+                 diff
+                 (ztree-diff-node-different child)))))
+      (ztree-diff-node-set-different node diff))))
 
 (defun ztree-diff-node-update-all-parents-diff (node)
   "Recursively update all parents diff status for the NODE."

@@ -117,7 +117,7 @@ By default paths starting with dot (like .git) are ignored")
 (defun ztree-diff-node-face (node)
   "Return the face for the NODE depending on diff status."
   (let ((diff (ztree-diff-node-different node)))
-    (cond ((ztree-diff-node-ignore-p node) ztreep-diff-model-ignored-face)
+    (cond ((eq diff 'ignore) ztreep-diff-model-ignored-face)
           ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
           (t ztreep-diff-model-normal-face))))
@@ -143,7 +143,11 @@ By default paths starting with dot (like .git) are ignored")
   (insert "\n")
   (ztree-insert-with-face " Mismatch file " ztreep-diff-model-diff-face)
   (ztree-insert-with-face "- different from other side" ztreep-diff-header-small-face)
+  (insert "\n ")
+  (ztree-insert-with-face "Ignored file" ztreep-diff-model-ignored-face)
+  (ztree-insert-with-face " - ignored from comparison" ztreep-diff-header-small-face)
   (insert "\n")
+
   (ztree-insert-with-face "==============" ztreep-diff-header-face)
   (insert "\n"))
 
@@ -261,8 +265,9 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
       (if err (message (concat "Error: " (nth 2 err)))
         (progn              ; otherwise:
           ;; assuming all went ok when left and right nodes are the same
-          ;; set both as not different
-          (ztree-diff-node-set-different node nil)
+          ;; set both as not different if they were not ignored
+          (unless (eq (ztree-diff-node-different node) 'ignore)
+            (ztree-diff-node-set-different node nil))
           ;; update left/right paths
           (if copy-to-right
               (ztree-diff-node-set-right-path node target-path)
@@ -441,16 +446,18 @@ unless it is a parent node."
 
 (defun ztree-node-is-visible (node)
   "Determine if the NODE should be visible."
-  ;; visible then
-  ;; 1) either it is a parent
-  (or (not (ztree-diff-node-parent node))    ; parent is always visible
-      (and
-       ;; 2.1) or it is not in ignore list and 
-       (or ztree-diff-show-filtered-files ; show filtered files regardless
-           (not (ztree-diff-node-ignore-p node)))
-       ;; 2.2) it has different status
-       (or ztree-diff-show-equal-files  ; show equal files regardless
-           (ztree-diff-node-different node)))))
+  (let ((diff (ztree-diff-node-different node)))
+    ;; visible then
+    ;; 1) either it is a parent
+    (or (ztree-diff-node-parent node)    ; parent is always visible
+        ;; 2.1) or it is not in ignore list and 
+        (and (eq diff 'ignore)
+             ztree-diff-show-filtered-files) ; show filtered files regardless
+        ;; 2.2) it has different status
+        (and ztree-diff-show-equal-files  ; show equal files regardless
+             (not diff))
+        (or (eq diff 'new)
+            (eq diff 'diff)))))
 
 (defun ztree-diff-toggle-show-equal-files ()
   "Toggle visibility of the equal files."
