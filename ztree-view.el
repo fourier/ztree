@@ -344,7 +344,7 @@ Optional argument FACE face to use to draw a character."
     (goto-char (+ x (-(point) 1)))
     (delete-char 1)
     (insert-char c 1)
-    (put-text-property (1- (point)) (point) 'face (if face face 'ztreep-arrow-face))))
+    (put-text-property (1- (point)) (point) 'font-lock-face (if face face 'ztreep-arrow-face))))
 
 (defun ztree-vertical-line-char ()
   "Return the character used to draw vertical line"
@@ -569,29 +569,34 @@ Writes a string with given DEPTH, prefixed with [ ] if EXPANDABLE
 and [-] or [+] depending on if it is EXPANDED from the specified OFFSET.
 Optional argument FACE face to write text with."
   (let ((node-sign #'(lambda (exp)
-                       (insert "[" (if exp "-" "+") "]")
-                       (set-text-properties (- (point) 3)
-                                            (point)
-                                            '(face ztreep-expand-sign-face)))))
-    (move-to-column offset t)
+                       (let ((sign (concat "[" (if exp "-" "+") "]")))
+                         (insert (propertize sign 
+                                             'font-lock-face
+                                             ztreep-expand-sign-face)))))
+        ;; face to use. if FACE is not null, use it, otherwise
+        ;; deside from the node type
+        (entry-face (cond (face face)
+                          (expandable 'ztreep-node-face)
+                          (t ztreep-leaf-face))))
+    ;; move-to-column in contrast to insert reuses the last property
+    ;; so need to clear it
+    (let ((start-pos (point)))
+      (move-to-column offset t)
+      (remove-text-properties start-pos (point) '(font-lock-face nil)))
     (delete-region (point) (line-end-position))
+    ;; every indentation level is 4 characters
     (when (> depth 0)
       (dotimes (i depth)
-        (insert " ")
-        (insert-char ?\s 3)))           ; insert 3 spaces
+        (insert-char ?\s 4)))           ; insert 4 spaces
     (when (> (length short-name) 0)
-      (if expandable
-          (progn
-            (funcall node-sign expanded)   ; for expandable nodes insert "[+/-]"
-            (insert " ")
-            (put-text-property 0 (length short-name)
-                               'face (if face face 'ztreep-node-face) short-name)
-            (insert short-name))
-        (progn
-          (insert "    ")
-          (put-text-property 0 (length short-name)
-                             'face (if face face 'ztreep-leaf-face) short-name)
-          (insert short-name))))))
+      (let ((start-pos (point)))
+        (if expandable
+            (funcall node-sign expanded))   ; for expandable nodes insert "[+/-]"
+        ;; indentation for leafs 4 spaces from the node name
+        (insert-char ?\s (- 4 (- (point) start-pos))))
+      (insert (propertize short-name 'font-lock-face entry-face)))))
+
+
 
 (defun ztree-jump-side ()
   "Jump to another side for 2-sided trees."
