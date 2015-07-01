@@ -48,6 +48,9 @@
 ;; Globals
 ;;
 
+(defvar ztree-draw-unicode-lines nil
+  "If set forces ztree to draw lines with unicode characters.")
+
 (defvar ztree-expanded-nodes-list nil
   "A list of Expanded nodes (i.e. directories) entries.")
 (make-variable-buffer-local 'ztree-expanded-nodes-list)
@@ -343,43 +346,64 @@ Optional argument FACE face to use to draw a character."
     (insert-char c 1)
     (put-text-property (1- (point)) (point) 'face (if face face 'ztreep-arrow-face))))
 
+(defun ztree-vertical-line-char ()
+  "Return the character used to draw vertical line"
+  (if ztree-draw-unicode-lines #x2502 ?\|))
+
+(defun ztree-horizontal-line-char ()
+  "Return the character used to draw vertical line"
+  (if ztree-draw-unicode-lines #x2500 ?\-))
+
+(defun ztree-left-bottom-corner-char ()
+  "Return the character used to draw vertical line"
+  (if ztree-draw-unicode-lines #x2514 ?\`))
+
+(defun ztree-left-intersection-char ()
+  "Return left intersection character.
+It is just vertical bar when unicode disabled"
+  (if ztree-draw-unicode-lines #x251C ?\|))
+
 (defun ztree-draw-vertical-line (y1 y2 x &optional face)
   "Draw a vertical line of '|' characters from Y1 row to Y2 in X column.
 Optional argument FACE face to draw line with."
-  (let ((count (abs (- y1 y2))))
+  (let ((ver-line-char (ztree-vertical-line-char))
+        (count (abs (- y1 y2))))
     (if (> y1 y2)
         (progn
           (dotimes (y count)
-            (ztree-draw-char ?\| x (+ y2 y) face))
-          (ztree-draw-char ?\| x (+ y2 count) face))
+            (ztree-draw-char ver-line-char x (+ y2 y) face))
+          (ztree-draw-char ver-line-char x (+ y2 count) face))
       (progn
         (dotimes (y count)
-          (ztree-draw-char ?\| x (+ y1 y) face))
-        (ztree-draw-char ?\| x (+ y1 count) face)))))
+          (ztree-draw-char ver-line-char x (+ y1 y) face))
+        (ztree-draw-char ver-line-char x (+ y1 count) face)))))
 
 (defun ztree-draw-vertical-rounded-line (y1 y2 x &optional face)
   "Draw a vertical line of '|' characters finishing with '`' character.
 Draws the line from Y1 row to Y2 in X column.
 Optional argument FACE facet to draw the line with."
-  (let ((count (abs (- y1 y2))))
+  (let ((ver-line-char (ztree-vertical-line-char))
+        (corner-char (ztree-left-bottom-corner-char))
+        (count (abs (- y1 y2))))
     (if (> y1 y2)
         (progn
           (dotimes (y count)
-            (ztree-draw-char ?\| x (+ y2 y) face))
-          (ztree-draw-char ?\` x (+ y2 count) face))
+            (ztree-draw-char ver-line-char x (+ y2 y) face))
+          (ztree-draw-char corner-char x (+ y2 count) face))
       (progn
         (dotimes (y count)
-          (ztree-draw-char ?\| x (+ y1 y) face))
-        (ztree-draw-char ?\` x (+ y1 count) face)))))
+          (ztree-draw-char ver-line-char x (+ y1 y) face))
+        (ztree-draw-char corner-char x (+ y1 count) face)))))
 
 
 (defun ztree-draw-horizontal-line (x1 x2 y)
   "Draw the horizontal line from column X1 to X2 in the row Y."
-  (if (> x1 x2)
-      (dotimes (x (1+ (- x1 x2)))
-        (ztree-draw-char ?\- (+ x2 x) y))
-    (dotimes (x (1+ (- x2 x1)))
-      (ztree-draw-char ?\- (+ x1 x) y))))
+  (let ((hor-line-char (ztree-horizontal-line-char)))
+    (if (> x1 x2)
+        (dotimes (x (1+ (- x1 x2)))
+          (ztree-draw-char hor-line-char (+ x2 x) y))
+      (dotimes (x (1+ (- x2 x1)))
+        (ztree-draw-char hor-line-char (+ x1 x) y)))))
 
 
 (defun ztree-draw-tree (tree depth start-offset)
@@ -394,6 +418,8 @@ Argument START-OFFSET column to start drawing from."
            (line-start (+ 3 offset))
            (line-end-leaf (+ 7 offset))
            (line-end-node (+ 4 offset))
+           (corner-char (ztree-left-bottom-corner-char))
+           (intersection-char (ztree-left-intersection-char))
            ;; determine if the line is visible. It is always the case
            ;; for 1-sided trees; however for 2 sided trees
            ;; it depends on which side is the actual element
@@ -415,17 +441,24 @@ Argument START-OFFSET column to start drawing from."
                                           (funcall visible (ztree-car-atom x)))))
               (x-offset (+ 2 offset)))
           (when last-child
-            (ztree-draw-vertical-rounded-line (1+ root)
-                                              (ztree-car-atom last-child)
-                                              x-offset)))
-        ;; draw recursively
-        (dolist (child children)
-          (ztree-draw-tree child (1+ depth) start-offset)
-          (let ((end (if (listp child) line-end-node line-end-leaf)))
-            (when (funcall visible (ztree-car-atom child))
-              (ztree-draw-horizontal-line line-start
-                                          end
-                                          (ztree-car-atom child)))))))))
+            (ztree-draw-vertical-line (1+ root)
+                                      (ztree-car-atom last-child)
+                                      x-offset))
+          ;; draw recursively
+          (dolist (child children)
+            (ztree-draw-tree child (1+ depth) start-offset)
+            (let ((end (if (listp child) line-end-node line-end-leaf))
+                  (row (ztree-car-atom child)))
+              (when (funcall visible (ztree-car-atom child))
+                (ztree-draw-char intersection-char (1- line-start) row)
+                (ztree-draw-horizontal-line line-start
+                                            end
+                                            row))))
+          ;; finally draw the corner at the end of vertical line
+          (when last-child
+            (ztree-draw-char corner-char
+                             x-offset
+                             (ztree-car-atom last-child))))))))
 
 (defun ztree-fill-parent-array (tree)
   "Set the root lines array.
