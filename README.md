@@ -54,7 +54,9 @@ Then you need to specify the left and right directories to compare.
  * `F5` forces the full rescan.
 
 ### Customizations
-By default all files starting with dot (like `.gitignore`) are not shown and excluded from the difference status for directories. One can add an additional regexps to the list `ztree-diff-filter-list`. 
+By default all files starting with dot (like `.gitignore`) are not shown and excluded from the difference status for directories. One can add an additional regexps to the list `ztree-diff-filter-list`.
+
+One also could turn on unicode characters to draw the tree with instead of normal ASCII-characters. This is controlled by the `ztree-draw-unicode-lines` variable.
 
 ### Screenshots
 
