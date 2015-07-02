@@ -171,7 +171,7 @@ Filters out . and .."
              nil
            'diff))))))
 
-(defun ztree-diff-model-subtree (parent path side)
+(defun ztree-diff-model-subtree (parent path side diff)
   "Create a subtree with given PARENT for the given PATH.
 Argument SIDE either 'left or 'right side."
   (let ((files (ztree-directory-files path))
@@ -185,8 +185,8 @@ Argument SIDE either 'left or 'right side."
                         (ztree-file-short-name file)
                         (ztree-file-short-name file)
                         nil
-                        'new))
-                 (children (ztree-diff-model-subtree node file side)))
+                        diff))
+                 (children (ztree-diff-model-subtree node file side diff)))
             (ztree-diff-node-set-children node children)
             (push node result))
         (push (ztree-diff-node-create
@@ -196,7 +196,7 @@ Argument SIDE either 'left or 'right side."
                (ztree-file-short-name file)
                (ztree-file-short-name file)
                nil
-               'new)
+               diff)
               result)))
     result))
 
@@ -266,7 +266,7 @@ the rest is the combined list of nodes."
          ;; when exist just on a left side and is a directory, add all
          ((and (file-directory-p file1) (not file2))
           (ztree-diff-node-set-children node 
-                                        (ztree-diff-model-subtree node file1 'left)))
+                                        (ztree-diff-model-subtree node file1 'left 'new)))
          ;; if exists on both sides and it is a file, compare
          ((and file2 (not (file-directory-p file1)))
           (ztree-diff-node-set-different node 
@@ -298,7 +298,8 @@ the rest is the combined list of nodes."
         (unless file1
           ;; if it is a directory, set the whole subtree to children
           (when (file-directory-p file2)
-            (ztree-diff-node-set-children node (ztree-diff-model-subtree node file2 'right)))
+            (ztree-diff-node-set-children node
+                                          (ztree-diff-model-subtree node file2 'right 'new)))
           ;; update the different status for the whole comparison
           ;; depending if the node should participate in overall result
           (unless (ztree-diff-model-ignore-p node)
