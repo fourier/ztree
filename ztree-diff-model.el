@@ -80,6 +80,8 @@
             ;;                 (if parent (ztree-diff-node-short-name parent) "nil"))
             " * Parent: " (funcall string-or-nil (ztree-diff-node-parent node))
             "\n"
+            " * Status: " (funcall string-or-nil (ztree-diff-node-different node))
+            "\n"
             " * Left path: " (funcall string-or-nil (ztree-diff-node-left-path node))
             "\n"
             " * Right path: " (funcall string-or-nil (ztree-diff-node-right-path node))
@@ -203,7 +205,7 @@ Argument SIDE either 'left or 'right side."
 
 (defun ztree-diff-node-update-diff-from-children (node)
   "Set the diff status for the NODE based on its children."
-  (unless (eq (ztree-diff-node-different node 'ignore))
+  ;(unless (eq (ztree-diff-node-different node 'ignore))
     (let ((children (ztree-diff-node-children node))
           (diff nil))
       (dolist (child children)
@@ -212,7 +214,7 @@ Argument SIDE either 'left or 'right side."
                 (ztree-diff-model-update-diff
                  diff
                  (ztree-diff-node-different child)))))
-      (ztree-diff-node-set-different node diff))))
+      (ztree-diff-node-set-different node diff))) ;)
 
 (defun ztree-diff-node-update-all-parents-diff (node)
   "Recursively update all parents diff status for the NODE."
@@ -239,7 +241,7 @@ the rest is the combined list of nodes."
          (path2 (ztree-diff-node-right-path parent))
          (list1 (ztree-directory-files path1)) ;; left list of liles
          (list2 (ztree-directory-files path2)) ;; right list of files
-         (diff-parent nil) ;; status of this node
+         (diff-parent (ztree-diff-node-different parent)) ;; status of this node
          (children nil)    ;; children
          ;; helper function to find if the same file exists
          ;; on the other side
@@ -331,6 +333,7 @@ from comparison."
                                   nil
                                   nil)))
     (ztree-diff-node-traverse model)
+    (message (ztree-diff-node-to-string model))
     (message "Done.")
     model))
 
