@@ -27,10 +27,10 @@ Since **ztree** is a part of [GNU ELPA](https://elpa.gnu.org/), it is copyrighte
 
 For this you need to complete [this](https://raw.githubusercontent.com/fourier/ztree/contributions/request-assign.txt) form, and send it to [assign@gnu.org](mailto:assign@gnu.org). The FSF will send you the assignment contract that both you and the FSF will sign.
 
-For more information one can read [here](www.gnu.org/licenses/why-assign.html) to understand why it is needed.
+For more information one can read [here](http://www.gnu.org/licenses/why-assign.html) to understand why it is needed.
 
 As soon as the paperwork is done one can contribute to **ztree** with bigger pull requests.
-Note what pull requests without paperwork done will not be accepted, so please notify the maintainer ([Alexey Veretennikov](mailto:alexey.veretennikov@gmail.com)) if everything is in place.
+Note what pull requests without paperwork done will not be accepted, so please notify the [maintainer](mailto:alexey.veretennikov@gmail.com) if everything is in place.
 
 ### Manual
 Add the following to your .emacs file:
