@@ -16,6 +16,22 @@ Add to your `.emacs` or `.emacs.d/init.el` following lines:
                          
 Follow the installation instructions for the GNU ELPA above.
 
+## Contributions
+You can contribute to **ztree** in one of the following ways.
+- Submit a bug report
+- Submit a feature request
+- Submit a simple pull request (with changes < 15 lines)
+
+### Copyright issues
+Since **ztree** is a part of [GNU ELPA](https://elpa.gnu.org/), it is copyrighted by the [Free Software Foundation, Inc.](http://www.fsf.org/). Therefore in order to submit nontrivial changes (with total amount of lines > 15), one needs to to grant the right to include your works in GNU Emacs to the FSF.
+
+For this you need to complete [this](https://raw.githubusercontent.com/fourier/ztree/contributions/request-assign.txt) form, and send it to [assign@gnu.org](mailto:assign@gnu.org). The FSF will send you the assignment contract that both you and the FSF will sign.
+
+For more information one can read [here](www.gnu.org/licenses/why-assign.html) to understand why it is needed.
+
+As soon as the paperwork is done one can contribute to **ztree** with bigger pull requests.
+Note what pull requests without paperwork done will not be accepted, so please notify the maintainer ([Alexey Veretennikov](mailto:alexey.veretennikov@gmail.com)) if everything is in place.
+
 ### Manual
 Add the following to your .emacs file:
 
