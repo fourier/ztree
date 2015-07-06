@@ -53,7 +53,7 @@
 ;; right-path is the full path of the right side,
 ;; short-name - is the file or directory name
 ;; children - list of nodes - files or directories if the node is a directory
-;; different = {nil, 'new, 'diff, 'ignore} - means comparison status
+;; different = {nil, 'same, 'new, 'diff, 'ignore} - means comparison status
 (ztree-defrecord ztree-diff-node (parent left-path right-path short-name right-short-name children different))
 
 (defun ztree-diff-model-ignore-p (node)
@@ -63,17 +63,20 @@
 
 (defun ztree-diff-node-to-string (node)
   "Construct the string with contents of the NODE given."
-  (let* ((string-or-nil #'(lambda (x) (if x
-                                          (cond ((stringp x) x)
-                                                ((eq x 'new) "new")
-                                                ((eq x 'diff) "different")
-                                                ((eq x 'ignore) "ignored")
-                                                (t (ztree-diff-node-short-name x)))
-                                        "(empty)")))
-         (children (ztree-diff-node-children node))
-         (ch-str ""))
+  (let ((string-or-nil #'(lambda (x) (if x
+                                         (cond ((stringp x) x)
+                                               ((eq x 'new) "new")
+                                               ((eq x 'diff) "different")
+                                               ((eq x 'ignore) "ignored")
+                                               ((eq x 'same) "same")
+                                               (t (ztree-diff-node-short-name x)))
+                                       "(empty)")))
+        (children (ztree-diff-node-children node))
+        (ch-str ""))
     (dolist (x children)
-      (setq ch-str (concat ch-str "\n   * " (ztree-diff-node-short-name x))))
+      (setq ch-str (concat ch-str "\n   * " (ztree-diff-node-short-name x)
+                           ": "
+                           (funcall string-or-nil (ztree-diff-node-different x)))))
     (concat "Node: " (ztree-diff-node-short-name node)
             "\n"
             ;; " * Parent: " (let ((parent (ztree-diff-node-parent node)))
@@ -141,7 +144,7 @@ RIGHT if only on the right side."
 Returns t if equal."
   (let* ((file1-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file1)))
          (file2-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file2)))
-         (diff-command (concat diff-command "-q" " " file1-untrampified " " file2-untrampified))
+         (diff-command (concat diff-command " -q" " " file1-untrampified " " file2-untrampified))
          (diff-output (shell-command-to-string diff-command)))
     (not (> (length diff-output) 2))))
 
@@ -171,7 +174,7 @@ Filters out . and .."
         (ztree-diff-node-set-different
          node
          (if (ztree-diff-model-files-equal left right)
-             nil
+             'same
            'diff))))))
 
 (defun ztree-diff-model-subtree (parent path side diff)
@@ -224,13 +227,21 @@ Argument SIDE either 'left or 'right side."
 
 
 (defun ztree-diff-model-update-diff (old new)
-  "Get the diff status depending if OLD or NEW is not nil."
-  (if new
-      (if (or (not old)
-              (eq old 'new))
-          new
-        old)
-    old))
+  "Get the diff status depending if OLD or NEW is not nil.
+If the OLD is 'ignore, do not change anything"
+  ;; if the old whole directory is ignored, ignore children's status
+  (cond ((eql old 'ignore) 'ignore)
+        ;; if the new status is ignored, use old
+        ((eql new 'ignore) old)
+        ;; if the old or new status is different, return different
+        ((or (eql old 'diff)
+             (eql new 'diff)) 'diff)
+        ;; if new is 'new, return new
+        ((eql new 'new) 'new)
+        ;; all other cases return old
+        (t old)))
+
+
 
 (defun ztree-diff-node-traverse (parent)
   "Traverse 2 paths creating the list nodes with PARENT defined and diff status.
@@ -241,7 +252,8 @@ the rest is the combined list of nodes."
          (path2 (ztree-diff-node-right-path parent))
          (list1 (ztree-directory-files path1)) ;; left list of liles
          (list2 (ztree-directory-files path2)) ;; right list of files
-         (diff-parent (ztree-diff-node-different parent)) ;; status of this node
+         (diff-parent (when parent (ztree-diff-node-different parent))) ;; status of this node
+         (diff-status 'same) ;; status of this node
          (children nil)    ;; children
          ;; helper function to find if the same file exists
          ;; on the other side
@@ -274,16 +286,10 @@ the rest is the combined list of nodes."
          ;; if exists on both sides and it is a file, compare
          ((and file2 (not (file-directory-p file1)))
           (ztree-diff-node-set-different node 
-                                         (if (ztree-diff-model-files-equal file1 file2) nil 'diff)))
+                                         (if (ztree-diff-model-files-equal file1 file2) 'same 'diff)))
          ;; if exists on both sides and it is a directory, traverse further
          ((and file2 (file-directory-p file1))
           (ztree-diff-node-traverse node)))
-        ;; update difference status for the whole comparison
-        ;; depending if the node should participate in overall result
-        (unless (ztree-diff-model-ignore-p node)
-          (setq diff-parent
-                (ztree-diff-model-update-diff diff-parent
-                                              (ztree-diff-node-different node))))
         ;; push the created node to the result list
         (push node children)))
     ;; second - adding entries from the right directory which are not present
@@ -304,16 +310,18 @@ the rest is the combined list of nodes."
           (when (file-directory-p file2)
             (ztree-diff-node-set-children node
                                           (ztree-diff-model-subtree node file2 'right 'new)))
-          ;; update the different status for the whole comparison
-          ;; depending if the node should participate in overall result
-          (unless (ztree-diff-model-ignore-p node)
-            (setq diff-parent (ztree-diff-model-update-diff diff-parent 'new)))
           ;; push the created node to the result list
           (push node children))))
     ;; finally set different status based on all children
-    (ztree-diff-node-set-different parent diff-parent)
+    ;; depending if the node should participate in overall result
+    (setq diff-status (cl-reduce 'ztree-diff-model-update-diff 
+                                 children
+                                 :initial-value diff-status
+                                 :key 'ztree-diff-node-different))
+    (ztree-diff-node-set-different parent diff-status)
     ;; and set children
     (ztree-diff-node-set-children parent children)))
+
 
 (defun ztree-diff-model-create (dir1 dir2 &optional ignore-p)
   "Create a node based on DIR1 and DIR2.
@@ -333,7 +341,6 @@ from comparison."
                                   nil
                                   nil)))
     (ztree-diff-node-traverse model)
-    (message (ztree-diff-node-to-string model))
     (message "Done.")
     model))
 

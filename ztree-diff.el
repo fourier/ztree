@@ -120,7 +120,7 @@ By default paths starting with dot (like .git) are ignored")
     (cond ((eq diff 'ignore) ztreep-diff-model-ignored-face)
           ((eq diff 'diff) ztreep-diff-model-diff-face)
           ((eq diff 'new)  ztreep-diff-model-add-face)
-          (t ztreep-diff-model-normal-face))))
+          ((eq diff 'same) ztreep-diff-model-normal-face))))
 
 (defun ztree-diff-insert-buffer-header ()
   "Insert the header to the ztree buffer."
@@ -235,7 +235,7 @@ Argument NODE node containing paths to files to call a diff on."
                                   (let ((split-width-threshold nil))
                                     (view-file-other-window path))))))
     (cond ((and left right)
-           (if (not (ztree-diff-node-different node))
+           (if (eql (ztree-diff-node-different node) 'same)
                (funcall open-f left)
              (if hard
                  (ediff left right)
@@ -267,7 +267,7 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
           ;; assuming all went ok when left and right nodes are the same
           ;; set both as not different if they were not ignored
           (unless (eq (ztree-diff-node-different node) 'ignore)
-            (ztree-diff-node-set-different node nil))
+            (ztree-diff-node-set-different node 'same))
           ;; update left/right paths
           (if copy-to-right
               (ztree-diff-node-set-right-path node target-path)
@@ -447,28 +447,34 @@ unless it is a parent node."
 (defun ztree-node-is-visible (node)
   "Determine if the NODE should be visible."
   (let ((diff (ztree-diff-node-different node)))
+    t))
     ;; visible then
     ;; 1) either it is a parent
-    (or (ztree-diff-node-parent node)    ; parent is always visible
-        ;; 2.1) or it is not in ignore list and 
-        (and (eq diff 'ignore)
-             ztree-diff-show-filtered-files) ; show filtered files regardless
-        ;; 2.2) it has different status
-        (and ztree-diff-show-equal-files  ; show equal files regardless
-             (not diff))
-        (or (eq diff 'new)
-            (eq diff 'diff)))))
+    ;; (or (ztree-diff-node-parent node)    ; parent is always visible
+    ;;     nil)))
+        ;; ;; 2.1) or it is not in ignore list and 
+        ;; (and (eql diff 'ignore)
+        ;;      ztree-diff-show-filtered-files) ; show filtered files regardless
+        ;; ;; 2.2) it has different status
+        ;; (and
+        ;;  (not (eql diff 'same)))
+        ;;  ;ztree-diff-show-equal-files)  ; show equal files regardless
+         
+        ;; (or (eql diff 'new)
+        ;;     (eql diff 'diff)))))
 
 (defun ztree-diff-toggle-show-equal-files ()
   "Toggle visibility of the equal files."
   (interactive)
   (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
+  (message (concat (if ztree-diff-show-equal-files "Show" "Hide") " equal files"))
   (ztree-refresh-buffer))
 
 (defun ztree-diff-toggle-show-filtered-files ()
   "Toggle visibility of the filtered files."
   (interactive)
   (setq ztree-diff-show-filtered-files (not ztree-diff-show-filtered-files))
+  (message (concat (if ztree-diff-show-filtered-files "Show" "Hide") " filtered files"))
   (ztree-refresh-buffer))
 
 
