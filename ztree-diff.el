@@ -447,21 +447,18 @@ unless it is a parent node."
 (defun ztree-node-is-visible (node)
   "Determine if the NODE should be visible."
   (let ((diff (ztree-diff-node-different node)))
-    t))
     ;; visible then
-    ;; 1) either it is a parent
-    ;; (or (ztree-diff-node-parent node)    ; parent is always visible
-    ;;     nil)))
-        ;; ;; 2.1) or it is not in ignore list and 
-        ;; (and (eql diff 'ignore)
-        ;;      ztree-diff-show-filtered-files) ; show filtered files regardless
-        ;; ;; 2.2) it has different status
-        ;; (and
-        ;;  (not (eql diff 'same)))
-        ;;  ;ztree-diff-show-equal-files)  ; show equal files regardless
-         
-        ;; (or (eql diff 'new)
-        ;;     (eql diff 'diff)))))
+    ;; either it is a root. root have no parent
+    (or (not (ztree-diff-node-parent node))    ; parent is always visible
+        ;; or the files are different or orphan
+        (or (eql diff 'new)
+            (eql diff 'diff))
+        ;; or it is ignored but we show ignored for now
+        (and (eql diff 'ignore)
+             ztree-diff-show-filtered-files) 
+        ;; or they are same but we show same for now
+        (and (eql diff 'same)
+             ztree-diff-show-equal-files))))
 
 (defun ztree-diff-toggle-show-equal-files ()
   "Toggle visibility of the equal files."
