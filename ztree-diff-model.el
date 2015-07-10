@@ -256,18 +256,20 @@ If IS-DIR searching for directories; assume files otherwise"
   (let* ((list1 (ztree-directory-files (ztree-diff-node-left-path node))) ;; left list of liles
          (list2 (ztree-directory-files (ztree-diff-node-right-path node))) ;; right list of files
          (diff-status 'same) ;; status of this node
-         (parent (ztree-diff-node-parent node)) 
-         (ignore-status ;; if all children should be ignored
-          ;; when parent defined and its status is 'ignore
-          (or (and parent (eql (ztree-diff-node-different parent) 'ignore))
-              ;; or parent defined and node is in ignore list
-              (and parent (ztree-diff-model-ignore-p node))))
-         (children-status (if ignore-status 'ignore 'new))
-         (children nil))    ;; children
+         (parent (ztree-diff-node-parent node))
+         ;; when parent defined and its status is 'ignore
+         (parent-ignored
+          (and parent (eql (ztree-diff-node-different parent) 'ignore)))
+         ;; status automatically assigned to children of the node when
+         ;; they shouldn't be compared
+         (children-status (if parent-ignored 'ignore 'new))
+         (children nil))    ;; list of children
     ;; update waiting status
     (ztree-diff-model-update-wait-message)
-    ;; update node status if ignore
-    (when ignore-status
+    ;; update node status ignore status either inhereted from the
+    ;; parent or the own
+    (when (or parent-ignored
+              (and parent (ztree-diff-model-ignore-p node)))
       (ztree-diff-node-set-different node 'ignore)
       (setf diff-status 'ignore))
     ;; first - adding all entries from left directory
@@ -284,7 +286,7 @@ If IS-DIR searching for directories; assume files otherwise"
              (file2 (ztree-diff-model-find-in-files list2 simple-name isdir)))
         ;; entry set right path if found or nil otherwise
         (ztree-diff-node-set-right-path child file2)
-        ;; update child own status
+        ;; update child own ignore status
         (when (ztree-diff-model-ignore-p child)
           (ztree-diff-node-set-different child 'ignore))
         (cond
@@ -295,7 +297,8 @@ If IS-DIR searching for directories; assume files otherwise"
                                                                   file1
                                                                   'left
                                                                   (ztree-diff-node-different child))))
-         ;; if exists on both sides and it is a file, compare
+         ;; if 1) exists on both sides and 2) it is a file
+         ;; and 3) not ignored file
          ((and file2 (not isdir) (not (eql (ztree-diff-node-different child) 'ignore)))
           (ztree-diff-node-set-different child
                                          (ztree-diff-model-files-equal file1 file2)))
@@ -332,7 +335,7 @@ If IS-DIR searching for directories; assume files otherwise"
           (push child children))))
     ;; finally set different status based on all children
     ;; depending if the node should participate in overall result
-    (unless ignore-status
+    (unless parent-ignored
       (setq diff-status (cl-reduce 'ztree-diff-model-update-diff
                                    children
                                    :initial-value diff-status
