@@ -79,8 +79,6 @@
                            (funcall string-or-nil (ztree-diff-node-different x)))))
     (concat "Node: " (ztree-diff-node-short-name node)
             "\n"
-            ;; " * Parent: " (let ((parent (ztree-diff-node-parent node)))
-            ;;                 (if parent (ztree-diff-node-short-name parent) "nil"))
             " * Parent: " (funcall string-or-nil (ztree-diff-node-parent node))
             "\n"
             " * Status: " (funcall string-or-nil (ztree-diff-node-different node))
@@ -164,16 +162,25 @@ Filters out . and .."
         (isdir (ztree-diff-node-is-directory node))
         (left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node)))
-    ;; if node is a directory - traverse
-    (when (and left right
-               (file-exists-p left)
-               (file-exists-p right))
-      (if isdir ;; traverse directory
-          (ztree-diff-node-traverse node)
-        ;; node is a file
-        (ztree-diff-node-set-different
-         node
-         (ztree-diff-model-files-equal left right))))))
+    (if (not parent)      ;; if no parent - traverse
+        (ztree-diff-node-traverse node)
+      ;; verify if the node is not ignored by any chance
+      (when (or (ztree-diff-node-ignore-p node)
+                (eql (ztree-diff-node-different node) 'ignore))
+        (ztree-diff-node-set-different node 'ignore))
+      ;; if node is a directory - traverse
+      (when (and left right
+                 (file-exists-p left)
+                 (file-exists-p right))
+        (if isdir ;; traverse directory
+            (ztree-diff-node-traverse node)
+          ;; node is a file
+          (ztree-diff-node-set-different
+           node
+           (if (ztree-diff-node-ignore-p node) 'ignore
+             (ztree-diff-model-files-equal left right)))))
+      ;; update all parents statuses
+      (ztree-diff-node-update-all-parents-diff node))))
 
 (defun ztree-diff-model-subtree (parent path side diff)
   "Create a subtree with given PARENT for the given PATH.
@@ -208,15 +215,11 @@ Argument DIFF different status to be assigned to all created nodes."
 (defun ztree-diff-node-update-diff-from-children (node)
   "Set the diff status for the NODE based on its children."
                                         ;(unless (eq (ztree-diff-node-different node 'ignore))
-  (let ((children (ztree-diff-node-children node))
-        (diff nil))
-    (dolist (child children)
-      (unless (ztree-diff-model-ignore-p child)
-        (setq diff
-              (ztree-diff-model-update-diff
-               diff
-               (ztree-diff-node-different child)))))
-    (ztree-diff-node-set-different node diff))) ;)
+  (let ((diff (cl-reduce 'ztree-diff-model-update-diff
+                         (ztree-diff-node-children node)
+                         :initial-value 'same
+                         :key 'ztree-diff-node-different)))
+    (ztree-diff-node-set-different node diff)))
 
 (defun ztree-diff-node-update-all-parents-diff (node)
   "Recursively update all parents diff status for the NODE."

@@ -184,10 +184,8 @@ By default paths starting with dot (like .git) are ignored")
     (if (not parent)
         (when ztree-diff-dirs-pair
           (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair)))
-      (progn
-        (ztree-diff-model-partial-rescan common)
-        (ztree-diff-node-update-all-parents-diff node)
-        (ztree-refresh-buffer (line-number-at-pos))))))
+      (ztree-diff-model-partial-rescan common)
+      (ztree-refresh-buffer (line-number-at-pos)))))
 
 
 (defun ztree-diff-partial-rescan ()
@@ -418,18 +416,17 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                     ;; and update the parents with a new status
                     ;; of this node
                     (when (file-directory-p remove-path)
-                      (ztree-diff-model-partial-rescan node)
-                      (ztree-diff-node-update-all-parents-diff node)))
+                      (ztree-diff-model-partial-rescan node)))
                 ;; if everything ok 
                 (progn
                   ;; remove the node from children
                   (setq children (ztree-filter
                                   #'(lambda (x) (not (ztree-diff-node-equal x node)))
                                   children))
-                  (ztree-diff-node-set-children parent children))
-                (ztree-diff-node-update-all-parents-diff node)
-                ;;(ztree-diff-model-partial-rescan node)
-                (ztree-refresh-buffer (line-number-at-pos))))))))))
+                  (ztree-diff-node-set-children parent children)))
+              (ztree-diff-node-update-all-parents-diff node)
+              ;;(ztree-diff-model-partial-rescan node)
+              (ztree-refresh-buffer (line-number-at-pos)))))))))
 
 
 
