@@ -292,7 +292,12 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                      nil)
                  (error error-trap))))
       ;; error message if failed
-      (if err (message (concat "Error: " (nth 1 err)))
+      (if err
+          (progn
+            (message (concat "Error: " (nth 1 err)))
+            ;; and do rescan of the node
+            (ztree-diff-do-partial-rescan node))
+        ;; if everything is ok, update statuses
         (progn
           (message target-full-path)
           (if copy-to-right
@@ -379,24 +384,23 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
       (let* ((node (car found))
              (side (cdr found))
              (node-side (ztree-diff-node-side node))
-             (delete-from-left t)
-             (remove-path nil)
-             (parent (ztree-diff-node-parent node)))
-        (when parent                    ; do not delete the root node
-          ;; algorithm for determining what to delete similar to copy:
-          ;; 1. if the file is present on both sides, delete
-          ;;    from the side currently selected
-          (setq delete-from-left (if (eq node-side 'both)
-                                     (eq side 'left)
-                                   ;; 2) if one of sides is absent, delete
-                                   ;; from the side where the file is present
-                                   (eq node-side 'left)))
-          (setq remove-path (if delete-from-left
+             (parent (ztree-diff-node-parent node))
+             ;; algorithm for determining what to delete similar to copy:
+             ;; 1. if the file is present on both sides, delete
+             ;;    from the side currently selected
+             ;; 2. if one of sides is absent, delete
+             ;;    from the side where the file is present
+             (delete-from-left
+              (or (eql node-side 'left)
+                  (and (eql node-side 'both)
+                       (eql side 'left))))
+             (remove-path (if delete-from-left
                                 (ztree-diff-node-left-path node)
-                              (ztree-diff-node-right-path node)))
-          (when (yes-or-no-p (format "Delete the file [%s]%s ?"
-                                     (if delete-from-left "LEFT" "RIGHT")
-                                     remove-path))
+                              (ztree-diff-node-right-path node))))
+        (when (and parent                    ; do not delete the root node
+                   (yes-or-no-p (format "Delete the file [%s]%s ?"
+                                        (if delete-from-left "LEFT" "RIGHT")
+                                        remove-path)))
             (let* ((delete-command
                     (if (file-directory-p remove-path)
                         #'delete-directory
@@ -417,16 +421,27 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                     ;; of this node
                     (when (file-directory-p remove-path)
                       (ztree-diff-model-partial-rescan node)))
-                ;; if everything ok 
-                (progn
-                  ;; remove the node from children
-                  (setq children (ztree-filter
-                                  #'(lambda (x) (not (ztree-diff-node-equal x node)))
-                                  children))
-                  (ztree-diff-node-set-children parent children)))
+                ;; if everything ok
+                ;; if was only on one side
+                ;; remove the node from children
+                (if (or (and (eql node-side 'left)
+                               delete-from-left)
+                          (and (eql node-side 'right)
+                               (not delete-from-left)))
+                    (ztree-diff-node-set-children parent
+                                                  (ztree-filter
+                                                   (lambda (x) (not (ztree-diff-node-equal x node)))
+                                                   children))
+                  ;; otherwise update only one side
+                  (if delete-from-left
+                      (ztree-diff-node-set-left-path node nil)
+                    (ztree-diff-node-set-right-path node nil))
+                  ;; and update diff status
+                  ;; if was ignored keep the old status
+                  (unless (eql (ztree-diff-node-different node) 'ignore)
+                    (ztree-diff-node-set-different node 'new))))
               (ztree-diff-node-update-all-parents-diff node)
-              ;;(ztree-diff-model-partial-rescan node)
-              (ztree-refresh-buffer (line-number-at-pos)))))))))
+              (ztree-refresh-buffer (line-number-at-pos))))))))
 
 
 

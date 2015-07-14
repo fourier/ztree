@@ -156,8 +156,6 @@ Filters out . and .."
 
 (defun ztree-diff-model-partial-rescan (node)
   "Rescan the NODE."
-  ;; assuming what parent is always exists
-  ;; otherwise the UI shall force the full rescan
   (let ((parent (ztree-diff-node-parent node))
         (isdir (ztree-diff-node-is-directory node))
         (left (ztree-diff-node-left-path node))
@@ -341,7 +339,7 @@ if parent has ignored status - ignore"
     ;; finally set different status based on all children
     ;; depending if the node should participate in overall result
     (unless should-ignore
-      (ztree-diff-node-set-different node 
+      (ztree-diff-node-set-different node
                                      (cl-reduce 'ztree-diff-model-update-diff
                                    children
                                    :initial-value 'same
@@ -368,9 +366,6 @@ from comparison."
                                   nil
                                   nil)))
     (ztree-diff-node-recreate model)
-    (message (ztree-diff-node-to-string model))
-    (dolist (c (ztree-diff-node-children model))
-      (message (ztree-diff-node-to-string c)))
     (message "Done.")
     model))
 
