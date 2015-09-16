@@ -51,78 +51,62 @@
 (defvar ztree-draw-unicode-lines nil
   "If set forces ztree to draw lines with unicode characters.")
 
-(defvar ztree-expanded-nodes-list nil
+(defvar-local ztree-expanded-nodes-list nil
   "A list of Expanded nodes (i.e. directories) entries.")
-(make-variable-buffer-local 'ztree-expanded-nodes-list)
 
-(defvar ztree-start-node nil
+(defvar-local ztree-start-node nil
   "Start node(i.e. directory) for the window.")
-(make-variable-buffer-local 'ztree-start-node)
 
-(defvar ztree-line-to-node-table nil
+(defvar-local ztree-line-to-node-table nil
   "List of tuples with full node(i.e. file/directory name and the line.")
-(make-variable-buffer-local 'ztree-line-to-node-table)
 
-(defvar ztree-start-line nil
+(defvar-local ztree-start-line nil
   "Index of the start line - the root.")
-(make-variable-buffer-local 'ztree-start-line)
 
-(defvar ztree-parent-lines-array nil
+(defvar-local ztree-parent-lines-array nil
   "Array of parent lines.
 The ith value of the array is the parent line for line i.
 If ith value is i - it is the root line")
-(make-variable-buffer-local 'ztree-parent-lines-array)
 
-(defvar ztree-count-subsequent-bs nil
+(defvar-local ztree-count-subsequent-bs nil
   "Counter for the subsequest BS keys (to identify double BS).
 Used in order to not to use cl package and `lexical-let'")
-(make-variable-buffer-local 'ztree-count-subsequent-bs)
 
-(defvar ztree-line-tree-properties nil
+(defvar-local ztree-line-tree-properties nil
   "Hash with key - line number, value - property ('left, 'right, 'both).
 Used for 2-side trees, to determine if the node exists on left or right
 or both sides")
-(make-variable-buffer-local 'ztree-line-tree-properties)
 
-(defvar ztree-tree-header-fun nil
+(defvar-local ztree-tree-header-fun nil
   "Function inserting the header into the tree buffer.
 MUST inster newline at the end!")
-(make-variable-buffer-local 'ztree-tree-header-fun)
 
-(defvar ztree-node-short-name-fun nil
+(defvar-local ztree-node-short-name-fun nil
   "Function which creates a pretty-printable short string from the node.")
-(make-variable-buffer-local 'ztree-node-short-name-fun)
 
-(defvar ztree-node-is-expandable-fun nil
+(defvar-local ztree-node-is-expandable-fun nil
   "Function which determines if the node is expandable.
 For example if the node is a directory")
-(make-variable-buffer-local 'ztree-node-is-expandable-fun)
 
-(defvar ztree-node-equal-fun nil
+(defvar-local ztree-node-equal-fun nil
   "Function which determines if the 2 nodes are equal.")
-(make-variable-buffer-local 'ztree-node-equal-fun)
 
-(defvar ztree-node-contents-fun nil
+(defvar-local ztree-node-contents-fun nil
   "Function returning list of node contents.")
-(make-variable-buffer-local 'ztree-node-contents-fun)
 
-(defvar ztree-node-side-fun nil
+(defvar-local ztree-node-side-fun nil
   "Function returning position of the node: 'left, 'right or 'both.
 If not defined(by default) - using single screen tree, otherwise
 the buffer is split to 2 trees")
-(make-variable-buffer-local 'ztree-node-side-fun)
 
-(defvar ztree-node-face-fun nil
+(defvar-local ztree-node-face-fun nil
   "Function returning face for the node.")
-(make-variable-buffer-local 'ztree-node-face-fun)
 
-(defvar ztree-node-action-fun nil
+(defvar-local ztree-node-action-fun nil
   "Function called when Enter/Space pressed on the node.")
-(make-variable-buffer-local 'ztree-node-action-fun)
 
-(defvar ztree-node-showp-fun nil
+(defvar-local ztree-node-showp-fun nil
   "Function called to decide if the node should be visible.")
-(make-variable-buffer-local 'ztree-node-showp-fun)
 
 
 ;;

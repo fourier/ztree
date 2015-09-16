@@ -32,13 +32,11 @@
 ;;; Code:
 (require 'ztree-util)
 
-(defvar ztree-diff-model-wait-message nil
+(defvar-local ztree-diff-model-wait-message nil
   "Message showing while constructing the diff tree.")
-(make-variable-buffer-local 'ztree-diff-model-wait-message)
 
-(defvar ztree-diff-model-ignore-fun nil
+(defvar-local ztree-diff-model-ignore-fun nil
   "Function which determines if the node should be excluded from comparison.")
-(make-variable-buffer-local 'ztree-diff-model-ignore-fun)
 
 (defun ztree-diff-model-update-wait-message ()
   "Update the wait mesage with one more '.' progress indication."

@@ -79,18 +79,15 @@ By default all filest starting with dot '.', including . and ..")
 (defvar ztreep-diff-model-normal-face 'ztreep-diff-model-normal-face)
 
 
-(defvar ztree-diff-filter-list (list ztree-diff-hidden-files-regexp)
+(defvar-local ztree-diff-filter-list (list ztree-diff-hidden-files-regexp)
   "List of regexp file names to filter out.
 By default paths starting with dot (like .git) are ignored")
-(make-variable-buffer-local 'ztree-diff-filter-list)
 
-(defvar ztree-diff-dirs-pair nil
+(defvar-local ztree-diff-dirs-pair nil
   "Pair of the directories stored.  Used to perform the full rescan.")
-(make-variable-buffer-local 'ztree-diff-dirs-pair)
 
-(defvar ztree-diff-show-equal-files t
+(defvar-local ztree-diff-show-equal-files t
   "Show or not equal files/directories on both sides.")
-(make-variable-buffer-local 'ztree-diff-show-equal-files)
 
 (defvar ztree-diff-show-filtered-files nil
   "Show or not files from the filtered list.")
