@@ -4,7 +4,7 @@
 ;;
 ;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
 ;; 
-;; Created: 2013-11-1l
+;; Created: 2013-11-11
 ;;
 ;; Version: 1.0.2
 ;;
