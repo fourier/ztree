@@ -1,8 +1,8 @@
 ;;; ztree-diff-model.el --- diff model for directory trees -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
-;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
+;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;; 
 ;; Created: 2013-11-1l
 ;;
@@ -31,18 +31,19 @@
 
 ;;; Code:
 (require 'ztree-util)
-
-(defvar-local ztree-diff-model-wait-message nil
-  "Message showing while constructing the diff tree.")
+(eval-when-compile (require 'cl-lib))
 
 (defvar-local ztree-diff-model-ignore-fun nil
   "Function which determines if the node should be excluded from comparison.")
 
-(defun ztree-diff-model-update-wait-message ()
-  "Update the wait mesage with one more '.' progress indication."
-  (when ztree-diff-model-wait-message
-    (setq ztree-diff-model-wait-message (concat ztree-diff-model-wait-message "."))
-    (message ztree-diff-model-wait-message)))
+(defvar-local ztree-diff-model-progress-fun nil
+  "Function which should be called whenever the progress indications is updated.")
+
+
+(defun ztree-diff-model-update-progress ()
+  "Update the progress."
+  (when ztree-diff-model-progress-fun
+    (funcall ztree-diff-model-progress-fun)))
 
 ;; Create a record ztree-diff-node with defined fields and getters/setters
 ;; here:
@@ -153,30 +154,24 @@ Filters out . and .."
                 (directory-files dir 'full)))
 
 (defun ztree-diff-model-partial-rescan (node)
-  "Rescan the NODE."
-  (let ((parent (ztree-diff-node-parent node))
-        (isdir (ztree-diff-node-is-directory node))
-        (left (ztree-diff-node-left-path node))
-        (right (ztree-diff-node-right-path node)))
-    (if (not parent)      ;; if no parent - traverse
-        (ztree-diff-node-recreate node)
-      ;; verify if the node is not ignored by any chance
-      (when (or (ztree-diff-node-ignore-p node)
-                (eql (ztree-diff-node-different node) 'ignore))
-        (ztree-diff-node-set-different node 'ignore))
-      ;; if node is a directory - traverse
-      (when (and left right
-                 (file-exists-p left)
-                 (file-exists-p right))
-        (if isdir ;; traverse directory
-            (ztree-diff-node-recreate node)
-          ;; node is a file
-          (ztree-diff-node-set-different
-           node
-           (if (ztree-diff-node-ignore-p node) 'ignore
-             (ztree-diff-model-files-equal left right)))))
-      ;; update all parents statuses
-      (ztree-diff-node-update-all-parents-diff node))))
+  "Rescan the NODE.
+The node is a either a file or directory with both
+left and right parts existing."
+  ;; if a directory - recreate
+  (if (ztree-diff-node-is-directory node)
+      (ztree-diff-node-recreate node)
+    ;; if a file, change a status
+    (ztree-diff-node-set-different
+     node
+     (if (or (ztree-diff-model-ignore-p node) ; if should be ignored
+             (eql (ztree-diff-node-different node) 'ignore) ; was ignored
+             (eql (ztree-diff-node-different ; or parent was ignored
+                   (ztree-diff-node-parent node)) 'ignore))
+         'ignore
+       (ztree-diff-model-files-equal (ztree-diff-node-left-path node)
+                                     (ztree-diff-node-right-path node)))))
+  ;; update all parents statuses
+  (ztree-diff-node-update-all-parents-diff node))
 
 (defun ztree-diff-model-subtree (parent path side diff)
   "Create a subtree with given PARENT for the given PATH.
@@ -256,8 +251,9 @@ if in ignore list - ignore
 if parent has ignored status - ignore"
   (let ((parent (ztree-diff-node-parent node)))
     (and parent
-         (or (ztree-diff-model-ignore-p node)
-             (eql (ztree-diff-node-different parent) 'ignore)))))
+         (or (eql (ztree-diff-node-different parent) 'ignore)
+             (ztree-diff-model-ignore-p node)))))
+             
 
 
 (defun ztree-diff-node-recreate (node)
@@ -269,7 +265,7 @@ if parent has ignored status - ignore"
          (children-status (if should-ignore 'ignore 'new))
          (children nil))    ;; list of children
     ;; update waiting status
-    (ztree-diff-model-update-wait-message)
+    (ztree-diff-model-update-progress)
     ;; update node status ignore status either inhereted from the
     ;; parent or the own
     (when should-ignore
@@ -346,35 +342,21 @@ if parent has ignored status - ignore"
     (ztree-diff-node-set-children node children)))
 
 
-(defun ztree-diff-model-create (dir1 dir2 &optional ignore-p)
-  "Create a node based on DIR1 and DIR2.
-IGNORE-P is the optional filtering function, taking node as
-an argument, which determines if the node should be excluded
-from comparison."
-  (unless (file-directory-p dir1)
-    (error "Path %s is not a directory" dir1))
-  (unless (file-directory-p dir2)
-    (error "Path %s is not a directory" dir2))
-  (setf ztree-diff-model-ignore-fun ignore-p)
-  (setq ztree-diff-model-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
-  (let* ((model
-          (ztree-diff-node-create nil dir1 dir2
-                                  (ztree-file-short-name dir1)
-                                  (ztree-file-short-name dir2)
-                                  nil
-                                  nil)))
-    (ztree-diff-node-recreate model)
-    (message "Done.")
-    model))
-
 (defun ztree-diff-model-update-node (node)
   "Refresh the NODE."
-  (setq ztree-diff-model-wait-message
-        (concat "Updating " (ztree-diff-node-short-name node) " ..."))
-  (ztree-diff-node-recreate node)
-  (message "Done."))
+  (ztree-diff-node-recreate node))
 
 
+
+(defun ztree-diff-model-set-ignore-fun (ignore-p)
+  "Set the buffer-local ignore function to IGNORE-P.
+Ignore function is a function of one argument (ztree-diff-node)
+which returns t if the node should be ignored (like files starting
+with dot etc)."
+  (setf ztree-diff-model-ignore-fun ignore-p))
+
+(defun ztree-diff-model-set-progress-fun (progess-fun)
+  (setf ztree-diff-model-progress-fun progess-fun)) 
 
 (provide 'ztree-diff-model)
 

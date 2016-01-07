@@ -1,8 +1,8 @@
 ;;; ztree-diff.el --- Text mode diff for directory trees -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
-;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
+;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;; 
 ;; Created: 2013-11-1l
 ;;
@@ -89,8 +89,12 @@ By default paths starting with dot (like .git) are ignored")
 (defvar-local ztree-diff-show-equal-files t
   "Show or not equal files/directories on both sides.")
 
-(defvar ztree-diff-show-filtered-files nil
+(defvar-local ztree-diff-show-filtered-files nil
   "Show or not files from the filtered list.")
+
+(defvar-local ztree-diff-wait-message nil
+  "Message showing while constructing the diff tree.")
+
 
 ;;;###autoload
 (define-minor-mode ztreediff-mode
@@ -302,7 +306,10 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                                               target-full-path)
             (ztree-diff-node-set-left-path node
                                            target-full-path))
+          (setq ztree-diff-model-wait-message
+                (concat "Updating " (ztree-diff-node-short-name node) " ..."))
           (ztree-diff-model-update-node node)
+          (message "Done.")
           (ztree-diff-node-update-all-parents-diff node)
           (ztree-refresh-buffer (line-number-at-pos)))))))
 
@@ -484,20 +491,41 @@ unless it is a parent node."
   (ztree-refresh-buffer))
 
 
+(defun ztree-diff-update-wait-message ()
+  "Update the wait mesage with one more '.' progress indication."
+  (when ztree-diff-wait-message
+    (setq ztree-diff-wait-message (concat ztree-diff-wait-message "."))
+    (message ztree-diff-wait-message)))
+
 ;;;###autoload
 (defun ztree-diff (dir1 dir2)
   "Create an interactive buffer with the directory tree of the path given.
 Argument DIR1 left directory.
 Argument DIR2 right directory."
   (interactive "DLeft directory \nDRight directory ")
-  (let* ((difference (ztree-diff-model-create dir1 dir2 #'ztree-diff-node-ignore-p))
+  (unless (and dir1 (file-directory-p dir1))
+    (error "Path %s is not a directory" dir1))
+  (unless (file-exists-p dir1)
+    (error "Path %s does not exist" dir1))
+  (unless (and dir2 (file-directory-p dir2))
+    (error "Path %s is not a directory" dir2))
+  (unless (file-exists-p dir2)
+    (error "Path %s does not exist" dir2))
+  (let* ((model
+          (ztree-diff-node-create nil dir1 dir2
+                                  (ztree-file-short-name dir1)
+                                  (ztree-file-short-name dir2)
+                                  nil
+                                  nil))
          (buf-name (concat "*"
-                           (ztree-diff-node-short-name difference)
+                           (ztree-diff-node-short-name model)
                            " <--> "
-                           (ztree-diff-node-right-short-name difference)
+                           (ztree-diff-node-right-short-name model)
                            "*")))
+    ;; after this command we are in a new buffer,
+    ;; so all buffer-local vars are valid
     (ztree-view buf-name
-                difference
+                model
                 'ztree-node-is-visible
                 'ztree-diff-insert-buffer-header
                 'ztree-diff-node-short-name-wrapper
@@ -508,8 +536,17 @@ Argument DIR2 right directory."
                 'ztree-diff-node-action
                 'ztree-diff-node-side)
     (ztreediff-mode)
+    (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
+    (ztree-diff-model-set-progress-fun #'ztree-diff-update-wait-message)
     (setq ztree-diff-dirs-pair (cons dir1 dir2))
+
+    (setq ztree-diff-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
+    (ztree-diff-node-recreate model)
+    (message "Done.")
+    
     (ztree-refresh-buffer)))
+
+
 
 
 

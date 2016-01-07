@@ -1,8 +1,8 @@
 ;;; ztree-view.el --- Text mode tree view (buffer) -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013-2015  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
-;; Author: Alexey Veretennikov <alexey dot veretennikov at gmail dot com>
+;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;; 
 ;; Created: 2013-11-1l
 ;;
@@ -626,7 +626,9 @@ Optional argument LINE scroll to the line given."
                    children-fun
                    face-fun
                    action-fun
-                   &optional node-side-fun
+                   &optional
+                   node-side-fun
+                   post-create-hook
                    )
   "Create a ztree view buffer configured with parameters given.
 Argument BUFFER-NAME Name of the buffer created.
@@ -641,7 +643,8 @@ Argument EQUAL-FUN An equality function for nodes.
 Argument CHILDREN-FUN Function to get children from the node.
 Argument FACE-FUN Function to determine face of the node.
 Argument ACTION-FUN an action to perform when the Return is pressed.
-Optional argument NODE-SIDE-FUN Determines the side of the node."
+Optional argument NODE-SIDE-FUN Determines the side of the node.
+Optional argument POST-CREATE-FUN"
   (let ((buf (get-buffer-create buffer-name)))
     (switch-to-buffer buf)
     (ztree-mode)
