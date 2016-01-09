@@ -45,6 +45,7 @@
 
 (require 'ztree-util)
 (require 'ztree-view)
+(eval-when-compile (require 'cl-lib))
 
 ;;
 ;; Constants
@@ -60,7 +61,18 @@ By default all filest starting with dot '.', including . and ..")
 
 (defvar ztree-dir-move-focus nil
   "If set to true moves the focus to opened window when the
-user press RETURN on file ")t
+user press RETURN on file ")
+
+(defvar-local ztree-dir-filter-list (list ztree-hidden-files-regexp)
+  "List of regexp file names to filter out.
+By default paths starting with dot (like .git) are ignored.
+One could add own filters in the following way:
+
+(setq-default ztree-dir-filter-list (cons \"^.*\\.pyc\" ztree-dir-filter-list))
+")
+
+(defvar-local ztree-dir-show-filtered-files nil
+  "Show or not files from the filtered list.")
 
 
 ;;
@@ -74,6 +86,19 @@ user press RETURN on file ")t
   "*Face used for the header in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-header-face 'ztreep-header-face)
+
+
+(define-minor-mode ztreedir-mode
+  "A minor mode for displaying the directory trees in text mode."
+  ;; initial value
+  nil
+  ;; modeline name
+  " Dir"
+  ;; The minor mode keymap
+  `(
+    (,(kbd "H") . ztree-dir-toggle-show-filtered-files)))
+
+
 
 
 ;;
@@ -91,8 +116,12 @@ user press RETURN on file ")t
 
 (defun ztree-file-not-hidden (filename)
   "Determines if the file with FILENAME should be visible."
-  (not (string-match ztree-hidden-files-regexp
-                     (ztree-file-short-name filename))))
+  (let ((name (ztree-file-short-name filename)))
+    (and (not (or (string= name ".") (string= name "..")))
+         (or 
+          ztree-dir-show-filtered-files 
+          (not (cl-find-if (lambda (rx) (string-match rx name)) ztree-dir-filter-list))))))
+
 
 (defun ztree-find-file (node hard)
   "Find the file at NODE.
@@ -106,6 +135,17 @@ Otherwise, the ztree window is used to find the file."
            (save-selected-window (find-file-other-window node)))
           (t 
            (find-file node)))))
+
+
+(defun ztree-dir-toggle-show-filtered-files ()
+  "Toggle visibility of the filtered files."
+  (interactive)
+  (setq ztree-dir-show-filtered-files (not ztree-dir-show-filtered-files))
+  (message (concat (if ztree-dir-show-filtered-files "Show" "Hide") " filtered files"))
+  (ztree-refresh-buffer))
+
+
+
 
 ;;;###autoload
 (defun ztree-dir (path)
@@ -122,7 +162,9 @@ Otherwise, the ztree window is used to find the file."
                   'string-equal
                   '(lambda (x) (directory-files x 'full))
                   nil                   ; face
-                  'ztree-find-file)))) ; action
+                  'ztree-find-file)     ; action
+      (ztreedir-mode))))
+
 
 
 (provide 'ztree-dir)
