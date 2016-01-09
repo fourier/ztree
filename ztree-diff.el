@@ -112,6 +112,7 @@ By default paths starting with dot (like .git) are ignored")
     (,(kbd "v") . ztree-diff-view-file)
     (,(kbd "d") . ztree-diff-simple-diff-files)
     (,(kbd "r") . ztree-diff-partial-rescan)
+    (,(kbd "R") . ztree-diff-full-rescan)
     ([f5] . ztree-diff-full-rescan)))
 
 
@@ -185,7 +186,10 @@ By default paths starting with dot (like .git) are ignored")
     (if (not parent)
         (when ztree-diff-dirs-pair
           (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair)))
+      (ztree-diff-update-wait-message
+           (concat "Updating " (ztree-diff-node-short-name common) " ..."))
       (ztree-diff-model-partial-rescan common)
+      (message "Done")
       (ztree-refresh-buffer (line-number-at-pos)))))
 
 
@@ -262,17 +266,17 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                  (error error-trap))))
       ;; error message if failed
       (if err (message (concat "Error: " (nth 2 err)))
-        (progn              ; otherwise:
-          ;; assuming all went ok when left and right nodes are the same
-          ;; set both as not different if they were not ignored
-          (unless (eq (ztree-diff-node-different node) 'ignore)
-            (ztree-diff-node-set-different node 'same))
-          ;; update left/right paths
-          (if copy-to-right
-              (ztree-diff-node-set-right-path node target-path)
-            (ztree-diff-node-set-left-path node target-path))
-          (ztree-diff-node-update-all-parents-diff node)
-          (ztree-refresh-buffer (line-number-at-pos)))))))
+        ;; otherwise:
+        ;; assuming all went ok when left and right nodes are the same
+        ;; set both as not different if they were not ignored
+        (unless (eq (ztree-diff-node-different node) 'ignore)
+          (ztree-diff-node-set-different node 'same))
+        ;; update left/right paths
+        (if copy-to-right
+            (ztree-diff-node-set-right-path node target-path)
+          (ztree-diff-node-set-left-path node target-path))
+        (ztree-diff-node-update-all-parents-diff node)
+        (ztree-refresh-buffer (line-number-at-pos))))))
 
 
 (defun ztree-diff-copy-dir (node source-path destination-path copy-to-right)
@@ -299,19 +303,18 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
             ;; and do rescan of the node
             (ztree-diff-do-partial-rescan node))
         ;; if everything is ok, update statuses
-        (progn
-          (message target-full-path)
-          (if copy-to-right
-              (ztree-diff-node-set-right-path node
-                                              target-full-path)
-            (ztree-diff-node-set-left-path node
-                                           target-full-path))
-          (setq ztree-diff-model-wait-message
-                (concat "Updating " (ztree-diff-node-short-name node) " ..."))
-          (ztree-diff-model-update-node node)
-          (message "Done.")
-          (ztree-diff-node-update-all-parents-diff node)
-          (ztree-refresh-buffer (line-number-at-pos)))))))
+        (message target-full-path)
+        (if copy-to-right
+            (ztree-diff-node-set-right-path node
+                                            target-full-path)
+          (ztree-diff-node-set-left-path node
+                                         target-full-path))
+        (ztree-diff-update-wait-message
+         (concat "Updating " (ztree-diff-node-short-name node) " ..."))
+        (ztree-diff-model-update-node node)
+        (message "Done.")
+        (ztree-diff-node-update-all-parents-diff node)
+        (ztree-refresh-buffer (line-number-at-pos))))))
 
 
 (defun ztree-diff-copy ()
@@ -491,11 +494,13 @@ unless it is a parent node."
   (ztree-refresh-buffer))
 
 
-(defun ztree-diff-update-wait-message ()
+(defun ztree-diff-update-wait-message (&optional msg)
   "Update the wait mesage with one more '.' progress indication."
-  (when ztree-diff-wait-message
-    (setq ztree-diff-wait-message (concat ztree-diff-wait-message "."))
-    (message ztree-diff-wait-message)))
+  (if msg
+      (setq ztree-diff-wait-message msg)
+    (when ztree-diff-wait-message
+      (setq ztree-diff-wait-message (concat ztree-diff-wait-message "."))))
+  (message ztree-diff-wait-message))
 
 ;;;###autoload
 (defun ztree-diff (dir1 dir2)
@@ -539,8 +544,7 @@ Argument DIR2 right directory."
     (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
     (ztree-diff-model-set-progress-fun #'ztree-diff-update-wait-message)
     (setq ztree-diff-dirs-pair (cons dir1 dir2))
-
-    (setq ztree-diff-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
+    (ztree-diff-update-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
     (ztree-diff-node-recreate model)
     (message "Done.")
     

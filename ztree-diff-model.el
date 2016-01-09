@@ -205,12 +205,12 @@ Argument DIFF different status to be assigned to all created nodes."
 
 (defun ztree-diff-node-update-diff-from-children (node)
   "Set the diff status for the NODE based on its children."
-                                        ;(unless (eq (ztree-diff-node-different node 'ignore))
-  (let ((diff (cl-reduce 'ztree-diff-model-update-diff
-                         (ztree-diff-node-children node)
-                         :initial-value 'same
-                         :key 'ztree-diff-node-different)))
-    (ztree-diff-node-set-different node diff)))
+  (unless (eql (ztree-diff-node-different node) 'ignore)
+    (let ((diff (cl-reduce 'ztree-diff-model-update-diff
+                           (ztree-diff-node-children node)
+                           :initial-value 'same
+                           :key 'ztree-diff-node-different)))
+      (ztree-diff-node-set-different node diff))))
 
 (defun ztree-diff-node-update-all-parents-diff (node)
   "Recursively update all parents diff status for the NODE."
