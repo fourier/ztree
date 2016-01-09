@@ -4,7 +4,7 @@
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;; 
-;; Created: 2013-11-1l
+;; Created: 2013-11-11
 ;;
 ;; Keywords: files tools
 ;; URL: https://github.com/fourier/ztree
