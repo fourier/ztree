@@ -116,6 +116,7 @@ RIGHT if only on the right side."
     (if (and left right) 'both
       (if left 'left 'right))))
 
+
 (defun ztree-diff-node-equal (node1 node2)
   "Determines if NODE1 and NODE2 are equal."
   (and (string-equal (ztree-diff-node-short-name node1)
@@ -234,6 +235,24 @@ If the OLD is 'ignore, do not change anything"
         ;; all other cases return old
         (t old)))
 
+(defun ztree-diff-node-update-diff-from-parent (node)
+  "Recursively update diff status of all children of NODE.
+This function will traverse through all children recursively
+setting status from the NODE, unless they have an ignore status"
+  (let ((status (ztree-diff-node-different node))
+        (children (ztree-diff-node-children node)))
+    ;; if the parent has ignore status, force all kids this status
+    ;; otherwise only update status when the child status is not ignore
+    (mapc (lambda (child)
+            (when (or (eql status 'ignore)
+                      (not 
+                       (or (eql status 'ignore)
+                           (eql (ztree-diff-node-different child) 'ignore))))
+              (ztree-diff-node-set-different child status)
+              (ztree-diff-node-update-diff-from-parent child)))
+            children)))
+        
+    
 
 (defun ztree-diff-model-find-in-files (list shortname is-dir)
   "Find in LIST of files the file with name SHORTNAME.

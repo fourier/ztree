@@ -402,53 +402,58 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                   (and (eql node-side 'both)
                        (eql side 'left))))
              (remove-path (if delete-from-left
-                                (ztree-diff-node-left-path node)
-                              (ztree-diff-node-right-path node))))
+                              (ztree-diff-node-left-path node)
+                            (ztree-diff-node-right-path node))))
         (when (and parent                    ; do not delete the root node
                    (yes-or-no-p (format "Delete the file [%s]%s ?"
                                         (if delete-from-left "LEFT" "RIGHT")
                                         remove-path)))
-            (let* ((delete-command
-                    (if (file-directory-p remove-path)
-                        #'delete-directory
-                      #'delete-file))
-                   (children (ztree-diff-node-children parent))
-                   (err
-                    (condition-case error-trap
-                        (progn
-                          (funcall delete-command remove-path t)
-                          nil)
-                      (error error-trap))))
-              (if err
-                  (progn
-                    (message (concat "Error: " (nth 2 err)))
-                    ;; when error happened while deleting the
-                    ;; directory, rescan the node
-                    ;; and update the parents with a new status
-                    ;; of this node
-                    (when (file-directory-p remove-path)
-                      (ztree-diff-model-partial-rescan node)))
-                ;; if everything ok
-                ;; if was only on one side
-                ;; remove the node from children
-                (if (or (and (eql node-side 'left)
-                               delete-from-left)
-                          (and (eql node-side 'right)
-                               (not delete-from-left)))
-                    (ztree-diff-node-set-children parent
-                                                  (ztree-filter
-                                                   (lambda (x) (not (ztree-diff-node-equal x node)))
-                                                   children))
-                  ;; otherwise update only one side
-                  (if delete-from-left
-                      (ztree-diff-node-set-left-path node nil)
-                    (ztree-diff-node-set-right-path node nil))
-                  ;; and update diff status
-                  ;; if was ignored keep the old status
-                  (unless (eql (ztree-diff-node-different node) 'ignore)
-                    (ztree-diff-node-set-different node 'new))))
-              (ztree-diff-node-update-all-parents-diff node)
-              (ztree-refresh-buffer (line-number-at-pos))))))))
+          (let* ((delete-command
+                  (if (file-directory-p remove-path)
+                      #'delete-directory
+                    #'delete-file))
+                 (children (ztree-diff-node-children parent))
+                 (err
+                  (condition-case error-trap
+                      (progn
+                        (funcall delete-command remove-path t)
+                        nil)
+                    (error error-trap))))
+            (if err
+                (progn
+                  (message (concat "Error: " (nth 2 err)))
+                  ;; when error happened while deleting the
+                  ;; directory, rescan the node
+                  ;; and update the parents with a new status
+                  ;; of this node
+                  (when (file-directory-p remove-path)
+                    (ztree-diff-model-partial-rescan node)))
+              ;; if everything ok
+              ;; if was only on one side
+              ;; remove the node from children
+              (if (or (and (eql node-side 'left)
+                           delete-from-left)
+                      (and (eql node-side 'right)
+                           (not delete-from-left)))
+                  (ztree-diff-node-set-children parent
+                                                (ztree-filter
+                                                 (lambda (x) (not (ztree-diff-node-equal x node)))
+                                                 children))
+                ;; otherwise update only one side
+                (let ((update-fun 
+                       (if delete-from-left
+                           #'ztree-diff-node-set-left-path
+                         #'ztree-diff-node-set-right-path)))
+                  (mapcar (lambda (x) (funcall update-fun x nil))
+                          (cons node (ztree-diff-node-children node))))
+                ;; and update diff status
+                ;; if was ignored keep the old status
+                (unless (eql (ztree-diff-node-different node) 'ignore)
+                  (ztree-diff-node-set-different node 'new))
+                ;; finally update all children statuses
+                (ztree-diff-node-update-diff-from-parent node)))
+            (ztree-diff-node-update-all-parents-diff node)
+            (ztree-refresh-buffer (line-number-at-pos))))))))
 
 
 
