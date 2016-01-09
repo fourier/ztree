@@ -311,6 +311,7 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                                          target-full-path))
         (ztree-diff-update-wait-message
          (concat "Updating " (ztree-diff-node-short-name node) " ..."))
+        ;; TODO: do not rescan the node. Use some logic like in delete
         (ztree-diff-model-update-node node)
         (message "Done.")
         (ztree-diff-node-update-all-parents-diff node)
