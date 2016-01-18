@@ -445,8 +445,8 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                        (if delete-from-left
                            #'ztree-diff-node-set-left-path
                          #'ztree-diff-node-set-right-path)))
-                  (mapcar (lambda (x) (funcall update-fun x nil))
-                          (cons node (ztree-diff-node-children node))))
+                  (mapc (lambda (x) (funcall update-fun x nil))
+                        (cons node (ztree-diff-node-children node))))
                 ;; and update diff status
                 ;; if was ignored keep the old status
                 (unless (eql (ztree-diff-node-different node) 'ignore)

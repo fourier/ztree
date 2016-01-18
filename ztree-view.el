@@ -163,7 +163,9 @@ the buffer is split to 2 trees")
 (define-derived-mode ztree-mode special-mode "Ztree"
   "A major mode for displaying the directory tree in text mode."
   ;; only spaces
-  (setq indent-tabs-mode nil))
+  (setq indent-tabs-mode nil)
+  (setq	buffer-read-only t))
+
 
 (defun ztree-find-node-in-line (line)
   "Return the node for the LINE specified.
@@ -570,8 +572,7 @@ Optional argument FACE face to write text with."
     (delete-region (point) (line-end-position))
     ;; every indentation level is 4 characters
     (when (> depth 0)
-      (dotimes (i depth)
-        (insert-char ?\s 4)))           ; insert 4 spaces
+      (insert-char ?\s (* 4 depth)))           ; insert 4 spaces
     (when (> (length short-name) 0)
       (let ((start-pos (point)))
         (if expandable
@@ -606,13 +607,12 @@ Optional argument LINE scroll to the line given."
     ;; used in 2-side tree mode
     (when ztree-node-side-fun
       (setq ztree-line-tree-properties (make-hash-table)))
-    (toggle-read-only)
-    (erase-buffer)
-    (funcall ztree-tree-header-fun)
-    (setq ztree-start-line (line-number-at-pos (point)))
-    (ztree-insert-node-contents ztree-start-node)
-    (scroll-to-line (if line line ztree-start-line))
-    (toggle-read-only)))
+    (let ((buffer-read-only nil))
+      (erase-buffer)
+      (funcall ztree-tree-header-fun)
+      (setq ztree-start-line (line-number-at-pos (point)))
+      (ztree-insert-node-contents ztree-start-node)
+      (scroll-to-line (if line line ztree-start-line)))))
 
 
 (defun ztree-view (
@@ -628,7 +628,6 @@ Optional argument LINE scroll to the line given."
                    action-fun
                    &optional
                    node-side-fun
-                   post-create-hook
                    )
   "Create a ztree view buffer configured with parameters given.
 Argument BUFFER-NAME Name of the buffer created.
@@ -643,8 +642,7 @@ Argument EQUAL-FUN An equality function for nodes.
 Argument CHILDREN-FUN Function to get children from the node.
 Argument FACE-FUN Function to determine face of the node.
 Argument ACTION-FUN an action to perform when the Return is pressed.
-Optional argument NODE-SIDE-FUN Determines the side of the node.
-Optional argument POST-CREATE-FUN"
+Optional argument NODE-SIDE-FUN Determines the side of the node."
   (let ((buf (get-buffer-create buffer-name)))
     (switch-to-buffer buf)
     (ztree-mode)
