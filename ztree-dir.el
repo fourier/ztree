@@ -155,14 +155,14 @@ Otherwise, the ztree window is used to find the file."
     (let ((buf-name (concat "*Directory " path " tree*")))
       (ztree-view buf-name
                   (expand-file-name (substitute-in-file-name path))
-                  'ztree-file-not-hidden
-                  'ztree-insert-buffer-header
-                  'ztree-file-short-name
-                  'file-directory-p
-                  'string-equal
-                  '(lambda (x) (directory-files x 'full))
+                  #'ztree-file-not-hidden
+                  #'ztree-insert-buffer-header
+                  #'ztree-file-short-name
+                  #'file-directory-p
+                  #'string-equal
+                  (lambda (x) (directory-files x 'full))
                   nil                   ; face
-                  'ztree-find-file)     ; action
+                  #'ztree-find-file)    ; action
       (ztreedir-mode))))
 
 

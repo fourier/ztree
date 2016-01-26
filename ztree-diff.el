@@ -234,6 +234,8 @@ Argument NODE node containing paths to files to call a diff on."
 2 if left or right present - view left or rigth"
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node))
+        ;; FIXME: The GNU convention is to only use "path" for lists of
+        ;; directories as in load-path.
         (open-f #'(lambda (path) (if hard (find-file path)
                                   (let ((split-width-threshold nil))
                                     (view-file-other-window path))))))
@@ -270,11 +272,11 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
         ;; assuming all went ok when left and right nodes are the same
         ;; set both as not different if they were not ignored
         (unless (eq (ztree-diff-node-different node) 'ignore)
-          (ztree-diff-node-set-different node 'same))
+          (setf (ztree-diff-node-different node) 'same))
         ;; update left/right paths
         (if copy-to-right
-            (ztree-diff-node-set-right-path node target-path)
-          (ztree-diff-node-set-left-path node target-path))
+            (setf (ztree-diff-node-right-path node) target-path)
+          (setf (ztree-diff-node-left-path node) target-path))
         (ztree-diff-node-update-all-parents-diff node)
         (ztree-refresh-buffer (line-number-at-pos))))))
 
@@ -305,10 +307,8 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
         ;; if everything is ok, update statuses
         (message target-full-path)
         (if copy-to-right
-            (ztree-diff-node-set-right-path node
-                                            target-full-path)
-          (ztree-diff-node-set-left-path node
-                                         target-full-path))
+            (setf (ztree-diff-node-right-path node) target-full-path)
+          (setf (ztree-diff-node-left-path node) target-full-path))
         (ztree-diff-update-wait-message
          (concat "Updating " (ztree-diff-node-short-name node) " ..."))
         ;; TODO: do not rescan the node. Use some logic like in delete
@@ -436,21 +436,19 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
                            delete-from-left)
                       (and (eql node-side 'right)
                            (not delete-from-left)))
-                  (ztree-diff-node-set-children parent
-                                                (ztree-filter
-                                                 (lambda (x) (not (ztree-diff-node-equal x node)))
-                                                 children))
+                  (setf (ztree-diff-node-children parent)
+                        (ztree-filter
+                         (lambda (x) (not (ztree-diff-node-equal x node)))
+                         children))
                 ;; otherwise update only one side
-                (let ((update-fun 
-                       (if delete-from-left
-                           #'ztree-diff-node-set-left-path
-                         #'ztree-diff-node-set-right-path)))
-                  (mapc (lambda (x) (funcall update-fun x nil))
-                        (cons node (ztree-diff-node-children node))))
+                (mapc (if delete-from-left
+                          (lambda (x) (setf (ztree-diff-node-left-path x) nil))
+                        (lambda (x) (setf (ztree-diff-node-right-path x) nil)))
+                      (cons node (ztree-diff-node-children node)))
                 ;; and update diff status
                 ;; if was ignored keep the old status
                 (unless (eql (ztree-diff-node-different node) 'ignore)
-                  (ztree-diff-node-set-different node 'new))
+                  (setf (ztree-diff-node-different node) 'new))
                 ;; finally update all children statuses
                 (ztree-diff-node-update-diff-from-parent node)))
             (ztree-diff-node-update-all-parents-diff node)
@@ -523,11 +521,7 @@ Argument DIR2 right directory."
   (unless (file-exists-p dir2)
     (error "Path %s does not exist" dir2))
   (let* ((model
-          (ztree-diff-node-create nil dir1 dir2
-                                  (ztree-file-short-name dir1)
-                                  (ztree-file-short-name dir2)
-                                  nil
-                                  nil))
+          (ztree-diff-node-create nil dir1 dir2 nil))
          (buf-name (concat "*"
                            (ztree-diff-node-short-name model)
                            " <--> "

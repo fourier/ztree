@@ -315,11 +315,13 @@ Argument NODE node which contents will be returned."
                             (funcall ztree-node-short-name-fun y)))))
     (cons (sort (ztree-filter
                  #'(lambda (f) (funcall ztree-node-is-expandable-fun f))
-                 nodes) comp)
+                 nodes)
+                comp)
           (sort (ztree-filter
                  #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f)))
-                 nodes) comp))))
-
+                 nodes)
+                comp))))
+                
 
 (defun ztree-draw-char (c x y &optional face)
   "Draw char C at the position (1-based) (X Y).
@@ -607,12 +609,12 @@ Optional argument LINE scroll to the line given."
     ;; used in 2-side tree mode
     (when ztree-node-side-fun
       (setq ztree-line-tree-properties (make-hash-table)))
-    (let ((buffer-read-only nil))
+    (let ((inhibit-read-only t))
       (erase-buffer)
       (funcall ztree-tree-header-fun)
       (setq ztree-start-line (line-number-at-pos (point)))
-      (ztree-insert-node-contents ztree-start-node)
-      (scroll-to-line (if line line ztree-start-line)))))
+      (ztree-insert-node-contents ztree-start-node))
+    (scroll-to-line (if line line ztree-start-line))))
 
 
 (defun ztree-view (
