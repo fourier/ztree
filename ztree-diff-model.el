@@ -138,21 +138,6 @@ RIGHT if only on the right side."
        (string-equal (ztree-diff-node-right-path node1)
                      (ztree-diff-node-right-path node1))))
 
-(defun ztree-diff-untrampify-filename (file)
-  "Return FILE as the local file name."
-  ;; FIXME: We shouldn't use internal Tramp functions.
-  (require 'tramp)
-  (declare-function tramp-tramp-file-p "tramp" (name))
-  (declare-function tramp-file-name-localname "tramp" (vec))
-  (declare-function tramp-dissect-file-name "tramp" (name &optional nodefault))
-  (if (not (tramp-tramp-file-p file))
-      file
-    (tramp-file-name-localname (tramp-dissect-file-name file))))
-
-(defun ztree-diff-modef-quotify-string (x)
-  "Surround string X with quotes."
-  (concat "\"" x "\""))
-
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files FILE1 and FILE2 using external diff.
 Returns t if equal."
@@ -160,8 +145,8 @@ Returns t if equal."
   ;; the same host.
   ;; FIXME: We assume that default-directory is also on the same host as
   ;; file(1|2).
-  (let* ((file1-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file1)))
-         (file2-untrampified (ztree-diff-untrampify-filename (ztree-diff-modef-quotify-string file2)))
+  (let* ((file1-untrampified (ztree-quotify-string (ztree-untrampify-filename file1)))
+         (file2-untrampified (ztree-quotify-string (ztree-untrampify-filename file2)))
          (diff-command (concat diff-command " -q" " " file1-untrampified " " file2-untrampified))
          (diff-output (shell-command-to-string diff-command)))
     (if (<= (length diff-output) 2) 'same 'diff)))

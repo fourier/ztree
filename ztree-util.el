@@ -65,6 +65,21 @@ Used since `car-safe' returns nil for atoms"
     (insert text)
     (put-text-property start (point) 'face face)))
 
+(defun ztree-untrampify-filename (file)
+  "Return FILE as the local file name."
+  ;; FIXME: We shouldn't use internal Tramp functions.
+  (require 'tramp)
+  (declare-function tramp-tramp-file-p "tramp" (name))
+  (declare-function tramp-file-name-localname "tramp" (vec))
+  (declare-function tramp-dissect-file-name "tramp" (name &optional nodefault))
+  (if (not (tramp-tramp-file-p file))
+      file
+    (tramp-file-name-localname (tramp-dissect-file-name file))))
+
+(defun ztree-quotify-string (str)
+  "Surround STR with quotes."
+  (concat "\"" str "\""))
+
 (provide 'ztree-util)
 
 ;;; ztree-util.el ends here
