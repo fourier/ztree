@@ -141,10 +141,8 @@ RIGHT if only on the right side."
 (defun ztree-diff-model-files-equal (file1 file2)
   "Compare files FILE1 and FILE2 using external diff.
 Returns t if equal."
-  ;; FIXME: This "untrampification" only works if both file1 and file2 are on
-  ;; the same host.
-  ;; FIXME: We assume that default-directory is also on the same host as
-  ;; file(1|2).
+  (unless (ztree-same-host-p file1 file2)
+    (error "Compared files are not on the same host"))
   (let* ((file1-untrampified (ztree-quotify-string (ztree-untrampify-filename file1)))
          (file2-untrampified (ztree-quotify-string (ztree-untrampify-filename file2)))
          (diff-command (concat diff-command " -q" " " file1-untrampified " " file2-untrampified))

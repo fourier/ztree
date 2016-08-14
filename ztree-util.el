@@ -80,6 +80,12 @@ Used since `car-safe' returns nil for atoms"
   "Surround STR with quotes."
   (concat "\"" str "\""))
 
+(defun ztree-same-host-p (file1 file2)
+  "Return t if FILE1 and FILE2 are on the same host."
+  (let ((file1-remote (file-remote-p file1))
+        (file2-remote (file-remote-p file2)))
+    (string-equal file1-remote file2-remote)))
+
 (provide 'ztree-util)
 
 ;;; ztree-util.el ends here
