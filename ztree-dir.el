@@ -145,6 +145,13 @@ Otherwise, the ztree window is used to find the file."
   (ztree-refresh-buffer))
 
 
+(defun ztree-dir-directory-files (path)
+  "Returns the list of files/directories for the given PATH"
+  ;; remove . and .. from the list of files to avoid infinite
+  ;; recursion
+  (remove-if (lambda (x) (string-match-p "/\\.\\.?$" x))
+             (directory-files path 'full)))
+
 
 
 ;;;###autoload
@@ -160,7 +167,7 @@ Otherwise, the ztree window is used to find the file."
                   #'ztree-file-short-name
                   #'file-directory-p
                   #'string-equal
-                  (lambda (x) (directory-files x 'full))
+                  #'ztree-dir-directory-files
                   nil                   ; face
                   #'ztree-find-file)    ; action
       (ztreedir-mode))))
