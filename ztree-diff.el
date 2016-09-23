@@ -520,6 +520,8 @@ Argument DIR2 right directory."
     (error "Path %s is not a directory" dir2))
   (unless (file-exists-p dir2)
     (error "Path %s does not exist" dir2))
+  (unless (ztree-same-host-p dir1 dir2)
+    (error "Compared directories are not on the same host"))
   (let* ((model
           (ztree-diff-node-create nil dir1 dir2 nil))
          (buf-name (concat "*"
