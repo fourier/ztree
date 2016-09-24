@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
-;; 
+;;
 ;; Created: 2013-11-11
 ;;
 ;; Keywords: files tools
@@ -28,7 +28,7 @@
 ;;; Commentary:
 ;;
 ;; Add the following to your .emacs file:
-;; 
+;;
 ;; (push (substitute-in-file-name "path-to-ztree-directory") load-path)
 ;; (require 'ztree-dir)
 ;;
@@ -53,11 +53,11 @@
 
 (defconst ztree-hidden-files-regexp "^\\."
   "Hidden files regexp.
-By default all filest starting with dot '.', including . and ..")
+By default all filest starting with dot `.', including . and ..")
 
 ;;
 ;; Configurable variables
-;; 
+;;
 
 (defvar ztree-dir-move-focus nil
   "If set to true moves the focus to opened window when the
@@ -118,8 +118,8 @@ One could add own filters in the following way:
   "Determines if the file with FILENAME should be visible."
   (let ((name (ztree-file-short-name filename)))
     (and (not (or (string= name ".") (string= name "..")))
-         (or 
-          ztree-dir-show-filtered-files 
+         (or
+          ztree-dir-show-filtered-files
           (not (cl-find-if (lambda (rx) (string-match rx name)) ztree-dir-filter-list))))))
 
 
@@ -133,7 +133,7 @@ Otherwise, the ztree window is used to find the file."
            (find-file-other-window node))
           (hard
            (save-selected-window (find-file-other-window node)))
-          (t 
+          (t
            (find-file node)))))
 
 

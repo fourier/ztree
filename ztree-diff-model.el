@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
-;; 
+;;
 ;; Created: 2013-11-11
 ;;
 ;; Keywords: files tools
@@ -179,7 +179,7 @@ left and right parts existing."
 
 (defun ztree-diff-model-subtree (parent path side diff)
   "Create a subtree with given PARENT for the given PATH.
-Argument SIDE either 'left or 'right side.
+Argument SIDE either `left' or `right' side.
 Argument DIFF different status to be assigned to all created nodes."
   (let ((files (ztree-directory-files path))
         (result nil))
@@ -219,7 +219,7 @@ Argument DIFF different status to be assigned to all created nodes."
 
 (defun ztree-diff-model-update-diff (old new)
   "Get the diff status depending if OLD or NEW is not nil.
-If the OLD is 'ignore, do not change anything"
+If the OLD is `ignore', do not change anything"
   ;; if the old whole directory is ignored, ignore children's status
   (cond ((eql old 'ignore) 'ignore)
         ;; if the new status is ignored, use old
@@ -242,14 +242,14 @@ setting status from the NODE, unless they have an ignore status"
     ;; otherwise only update status when the child status is not ignore
     (mapc (lambda (child)
             (when (or (eql status 'ignore)
-                      (not 
+                      (not
                        (or (eql status 'ignore)
                            (eql (ztree-diff-node-different child) 'ignore))))
               (setf (ztree-diff-node-different child) status)
               (ztree-diff-node-update-diff-from-parent child)))
             children)))
-        
-    
+
+
 
 (defun ztree-diff-model-find-in-files (list shortname is-dir)
   "Find in LIST of files the file with name SHORTNAME.
@@ -370,7 +370,7 @@ with dot etc)."
   (setf ztree-diff-model-ignore-fun ignore-p))
 
 (defun ztree-diff-model-set-progress-fun (progess-fun)
-  (setf ztree-diff-model-progress-fun progess-fun)) 
+  (setf ztree-diff-model-progress-fun progess-fun))
 
 (provide 'ztree-diff-model)
 

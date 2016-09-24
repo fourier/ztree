@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
-;; 
+;;
 ;; Created: 2013-11-11
 ;;
 ;; Keywords: files tools
@@ -33,7 +33,7 @@
 
 (defconst ztree-diff-hidden-files-regexp "^\\."
   "Hidden files regexp.
-By default all filest starting with dot '.', including . and ..")
+By default all filest starting with dot `.', including . and ..")
 
 (defface ztreep-diff-header-face
   '((((type tty pc) (class color)) :foreground "lightblue" :weight bold)
@@ -478,7 +478,7 @@ unless it is a parent node."
             (eql diff 'diff))
         ;; or it is ignored but we show ignored for now
         (and (eql diff 'ignore)
-             ztree-diff-show-filtered-files) 
+             ztree-diff-show-filtered-files)
         ;; or they are same but we show same for now
         (and (eql diff 'same)
              ztree-diff-show-equal-files))))
@@ -499,7 +499,7 @@ unless it is a parent node."
 
 
 (defun ztree-diff-update-wait-message (&optional msg)
-  "Update the wait mesage with one more '.' progress indication."
+  "Update the wait mesage with one more `.' progress indication."
   (if msg
       (setq ztree-diff-wait-message msg)
     (when ztree-diff-wait-message
@@ -549,7 +549,7 @@ Argument DIR2 right directory."
     (ztree-diff-update-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
     (ztree-diff-node-recreate model)
     (message "Done.")
-    
+
     (ztree-refresh-buffer)))
 
 

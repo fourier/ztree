@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
-;; 
+;;
 ;; Created: 2013-11-11
 ;;
 ;; Keywords: files tools
@@ -44,7 +44,7 @@ Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
 
 
 (defun ztree-printable-string (string)
-  "Strip newline character from file names, like 'Icon\n.
+  "Strip newline character from file names, like `Icon\n'.
 Argument STRING string to process.'."
   (replace-regexp-in-string "\n" "" string))
 

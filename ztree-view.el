@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
-;; 
+;;
 ;; Created: 2013-11-11
 ;;
 ;; Keywords: files tools
@@ -73,7 +73,7 @@ If ith value is i - it is the root line")
 Used in order to not to use cl package and `lexical-let'")
 
 (defvar-local ztree-line-tree-properties nil
-  "Hash with key - line number, value - property ('left, 'right, 'both).
+  "Hash with key - line number, value - property (`left', `right', `both').
 Used for 2-side trees, to determine if the node exists on left or right
 or both sides")
 
@@ -95,8 +95,8 @@ For example if the node is a directory")
   "Function returning list of node contents.")
 
 (defvar-local ztree-node-side-fun nil
-  "Function returning position of the node: 'left, 'right or 'both.
-If not defined(by default) - using single screen tree, otherwise
+  "Function returning position of the node: `left', `right' or `both'.
+If not defined (by default) - using single screen tree, otherwise
 the buffer is split to 2 trees")
 
 (defvar-local ztree-node-face-fun nil
@@ -321,7 +321,7 @@ Argument NODE node which contents will be returned."
                  #'(lambda (f) (not (funcall ztree-node-is-expandable-fun f)))
                  nodes)
                 comp))))
-                
+
 
 (defun ztree-draw-char (c x y &optional face)
   "Draw char C at the position (1-based) (X Y).
@@ -352,7 +352,7 @@ It is just vertical bar when unicode disabled"
   (if ztree-draw-unicode-lines #x251C ?\|))
 
 (defun ztree-draw-vertical-line (y1 y2 x &optional face)
-  "Draw a vertical line of '|' characters from Y1 row to Y2 in X column.
+  "Draw a vertical line of `|' characters from Y1 row to Y2 in X column.
 Optional argument FACE face to draw line with."
   (let ((ver-line-char (ztree-vertical-line-char))
         (count (abs (- y1 y2))))
@@ -367,7 +367,7 @@ Optional argument FACE face to draw line with."
         (ztree-draw-char ver-line-char x (+ y1 count) face)))))
 
 (defun ztree-draw-vertical-rounded-line (y1 y2 x &optional face)
-  "Draw a vertical line of '|' characters finishing with '`' character.
+  "Draw a vertical line of `|' characters finishing with `\\=`' character.
 Draws the line from Y1 row to Y2 in X column.
 Optional argument FACE facet to draw the line with."
   (let ((ver-line-char (ztree-vertical-line-char))
@@ -558,7 +558,7 @@ and [-] or [+] depending on if it is EXPANDED from the specified OFFSET.
 Optional argument FACE face to write text with."
   (let ((node-sign #'(lambda (exp)
                        (let ((sign (concat "[" (if exp "-" "+") "]")))
-                         (insert (propertize sign 
+                         (insert (propertize sign
                                              'font-lock-face
                                              ztreep-expand-sign-face)))))
         ;; face to use. if FACE is not null, use it, otherwise
