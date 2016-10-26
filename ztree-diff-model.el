@@ -143,11 +143,18 @@ RIGHT if only on the right side."
 Returns t if equal."
   (unless (ztree-same-host-p file1 file2)
     (error "Compared files are not on the same host"))
-  (let* ((file1-untrampified (ztree-quotify-string (ztree-untrampify-filename file1)))
-         (file2-untrampified (ztree-quotify-string (ztree-untrampify-filename file2)))
-         (diff-command (concat diff-command " -q" " " file1-untrampified " " file2-untrampified))
-         (diff-output (shell-command-to-string diff-command)))
-    (if (<= (length diff-output) 2) 'same 'diff)))
+  (let* ((file1-untrampified (ztree-untrampify-filename file1))
+         (file2-untrampified (ztree-untrampify-filename file2))
+         (diff-cmd (concat diff-command " -q" " "
+                           (ztree-quotify-string file1-untrampified)
+                           " "
+                           (ztree-quotify-string file2-untrampified))))
+    (if (and 
+         (= (nth 7 (file-attributes file1-untrampified))
+            (nth 7 (file-attributes file2-untrampified)))
+         (> (length (shell-command-to-string diff-cmd)) 2))
+        'diff
+      'same)))
 
 (defun ztree-directory-files (dir)
   "Return the list of full paths of files in a directory DIR.
