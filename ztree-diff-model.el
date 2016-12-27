@@ -144,15 +144,13 @@ Returns t if equal."
   (unless (ztree-same-host-p file1 file2)
     (error "Compared files are not on the same host"))
   (let* ((file1-untrampified (ztree-untrampify-filename file1))
-         (file2-untrampified (ztree-untrampify-filename file2))
-         (diff-cmd (concat diff-command " -q" " "
-                           (ztree-quotify-string file1-untrampified)
-                           " "
-                           (ztree-quotify-string file2-untrampified))))
-    (if (and 
-         (= (nth 7 (file-attributes file1-untrampified))
+         (file2-untrampified (ztree-untrampify-filename file2)))
+    (if (or 
+         (/= (nth 7 (file-attributes file1-untrampified))
             (nth 7 (file-attributes file2-untrampified)))
-         (> (length (shell-command-to-string diff-cmd)) 2))
+         (/= 0 (process-file diff-command nil nil nil "-q"
+                           file1-untrampified
+                           file2-untrampified)))
         'diff
       'same)))
 
