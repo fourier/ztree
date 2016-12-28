@@ -45,7 +45,7 @@
 
 (require 'ztree-util)
 (require 'ztree-view)
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 
 ;;
 ;; Constants
@@ -149,8 +149,8 @@ Otherwise, the ztree window is used to find the file."
   "Returns the list of files/directories for the given PATH"
   ;; remove . and .. from the list of files to avoid infinite
   ;; recursion
-  (remove-if (lambda (x) (string-match-p "/\\.\\.?$" x))
-             (directory-files path 'full)))
+  (cl-remove-if (lambda (x) (string-match-p "/\\.\\.?$" x))
+                (directory-files path 'full)))
 
 
 
