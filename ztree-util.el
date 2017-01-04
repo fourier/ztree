@@ -48,10 +48,17 @@ Taken from http://www.emacswiki.org/emacs/ElispCookbook#toc39"
 Argument STRING string to process.'."
   (replace-regexp-in-string "\n" "" string))
 
+
 (defun ztree-file-short-name (file)
   "By given FILE name return base file/directory name.
 Taken from http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg01238.html"
-  (ztree-printable-string (file-name-nondirectory (directory-file-name file))))
+  (let* ((dir (directory-file-name file))
+         (simple-dir (file-name-nondirectory dir)))
+    ;; check if the root directory
+    (if (string= "" simple-dir)
+        dir
+      (ztree-printable-string simple-dir))))
+
 
 (defun ztree-car-atom (value)
   "Return VALUE if value is an atom, otherwise (car value) or nil.
@@ -78,6 +85,13 @@ Used since `car-safe' returns nil for atoms"
   (let ((file1-remote (file-remote-p file1))
         (file2-remote (file-remote-p file2)))
     (string-equal file1-remote file2-remote)))
+
+
+(defun ztree-scroll-to-line (line)
+  "Recommended way to set the cursor to specified LINE."
+  (goto-char (point-min))
+  (forward-line (1- line)))
+
 
 (provide 'ztree-util)
 

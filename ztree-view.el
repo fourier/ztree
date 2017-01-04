@@ -192,16 +192,12 @@ or nil if there is no node"
   "For given LINE set the PARENT in the global array."
   (aset ztree-parent-lines-array (- line ztree-start-line) parent))
 
+
 (defun ztree-get-parent-for-line (line)
   "For given LINE return a parent."
   (when (and (>= line ztree-start-line)
              (< line (+ (length ztree-parent-lines-array) ztree-start-line)))
     (aref ztree-parent-lines-array (- line ztree-start-line))))
-
-(defun scroll-to-line (line)
-  "Recommended way to set the cursor to specified LINE."
-  (goto-char (point-min))
-  (forward-line (1- line)))
 
 
 (defun ztree-do-toggle-expand-subtree-iter (node state)
@@ -303,7 +299,7 @@ then close the node."
               (setq ztree-count-subsequent-bs t)
               (ztree-refresh-buffer line))
           (progn (setq ztree-count-subsequent-bs nil)
-                 (scroll-to-line parent)))))))
+                 (ztree-scroll-to-line parent)))))))
 
 
 (defun ztree-get-splitted-node-contens (node)
@@ -327,7 +323,7 @@ Argument NODE node which contents will be returned."
   "Draw char C at the position (1-based) (X Y).
 Optional argument FACE face to use to draw a character."
   (save-excursion
-    (scroll-to-line y)
+    (ztree-scroll-to-line y)
     (beginning-of-line)
     (goto-char (+ x (-(point) 1)))
     (delete-char 1)
@@ -335,15 +331,15 @@ Optional argument FACE face to use to draw a character."
     (put-text-property (1- (point)) (point) 'font-lock-face (if face face 'ztreep-arrow-face))))
 
 (defun ztree-vertical-line-char ()
-  "Return the character used to draw vertical line"
+  "Return the character used to draw vertical line."
   (if ztree-draw-unicode-lines #x2502 ?\|))
 
 (defun ztree-horizontal-line-char ()
-  "Return the character used to draw vertical line"
+  "Return the character used to draw vertical line."
   (if ztree-draw-unicode-lines #x2500 ?\-))
 
 (defun ztree-left-bottom-corner-char ()
-  "Return the character used to draw vertical line"
+  "Return the character used to draw vertical line."
   (if ztree-draw-unicode-lines #x2514 ?\`))
 
 (defun ztree-left-intersection-char ()
@@ -614,7 +610,16 @@ Optional argument LINE scroll to the line given."
       (funcall ztree-tree-header-fun)
       (setq ztree-start-line (line-number-at-pos (point)))
       (ztree-insert-node-contents ztree-start-node))
-    (scroll-to-line (if line line ztree-start-line))))
+    (ztree-scroll-to-line (if line line ztree-start-line))))
+
+
+(defun ztree-change-start-node (node)
+  "Refresh the buffer setting the new root NODE.
+This will reuse all other settings for the current ztree buffer, but
+change the root node to the node specified."
+  (setq ztree-start-node node
+        ztree-expanded-nodes-list (list ztree-start-node))
+  (ztree-refresh-buffer))
 
 
 (defun ztree-view (
