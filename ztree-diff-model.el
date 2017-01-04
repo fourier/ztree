@@ -146,8 +146,8 @@ Returns t if equal."
   (let* ((file1-untrampified (ztree-untrampify-filename file1))
          (file2-untrampified (ztree-untrampify-filename file2)))
     (if (or 
-         (/= (nth 7 (file-attributes file1-untrampified))
-            (nth 7 (file-attributes file2-untrampified)))
+         (/= (nth 7 (file-attributes file1))
+            (nth 7 (file-attributes file2)))
          (/= 0 (process-file diff-command nil nil nil "-q"
                            file1-untrampified
                            file2-untrampified)))
