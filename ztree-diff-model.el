@@ -145,7 +145,7 @@ Returns t if equal."
     (error "Compared files are not on the same host"))
   (let* ((file1-untrampified (ztree-untrampify-filename file1))
          (file2-untrampified (ztree-untrampify-filename file2)))
-    (if (or 
+    (if (or
          (/= (nth 7 (file-attributes file1))
             (nth 7 (file-attributes file2)))
          (/= 0 (process-file diff-command nil nil nil "-q"
@@ -374,8 +374,12 @@ which returns t if the node should be ignored (like files starting
 with dot etc)."
   (setf ztree-diff-model-ignore-fun ignore-p))
 
-(defun ztree-diff-model-set-progress-fun (progess-fun)
-  (setf ztree-diff-model-progress-fun progess-fun))
+
+(defun ztree-diff-model-set-progress-fun (progress-fun)
+  "Setter for the buffer-local PROGRESS-FUN callback.
+This callback is called to indicate the ongoing activity.
+Callback is a function without arguments."
+  (setf ztree-diff-model-progress-fun progress-fun))
 
 (provide 'ztree-diff-model)
 

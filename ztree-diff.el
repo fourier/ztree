@@ -499,7 +499,7 @@ unless it is a parent node."
 
 
 (defun ztree-diff-update-wait-message (&optional msg)
-  "Update the wait mesage with one more `.' progress indication."
+  "Update the wait message MSG with one more `.' progress indication."
   (if msg
       (setq ztree-diff-wait-message msg)
     (when ztree-diff-wait-message

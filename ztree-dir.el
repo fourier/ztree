@@ -60,8 +60,7 @@ By default all filest starting with dot `.', including . and ..")
 ;;
 
 (defvar ztree-dir-move-focus nil
-  "If set to true moves the focus to opened window when the
-user press RETURN on file")
+  "Defines if move focus to opened window on hard-action command (RETURN) on a file.")
 
 (defvar-local ztree-dir-filter-list (list ztree-hidden-files-regexp)
   "List of regexp file names to filter out.
@@ -148,7 +147,7 @@ Otherwise, the ztree window is used to find the file."
 
 
 (defun ztree-dir-directory-files (path)
-  "Returns the list of files/directories for the given PATH"
+  "Return the list of files/directories for the given PATH."
   ;; remove . and .. from the list of files to avoid infinite
   ;; recursion
   (cl-remove-if (lambda (x) (string-match-p "/\\.\\.?$" x))
