@@ -95,7 +95,7 @@ By default paths starting with dot (like .git) are ignored")
 (defvar-local ztree-diff-wait-message nil
   "Message showing while constructing the diff tree.")
 
-(defvar ztree-diff--ediff-previous-window-configuration nil
+(defvar-local ztree-diff-ediff-previous-window-configuration nil
   "Window configuration prior to calling `ediff'.")
 
 ;;;###autoload
