@@ -95,6 +95,8 @@ By default paths starting with dot (like .git) are ignored")
 (defvar-local ztree-diff-wait-message nil
   "Message showing while constructing the diff tree.")
 
+(defvar-local ztree-diff-ediff-previous-window-configuration nil
+  "Window configuration prior to calling `ediff'.")
 
 ;;;###autoload
 (define-minor-mode ztreediff-mode
@@ -224,6 +226,33 @@ Argument NODE node containing paths to files to call a diff on."
       (let ((node (car found)))
         (ztree-diff-simple-diff node)))))
 
+(defun ztree-diff-ediff-before-setup-hook-function ()
+  "Hook function for `ediff-before-setup-hook'.
+
+See the Info node `(ediff) hooks'.
+
+This hook function removes itself."
+  (setq ztree-diff--ediff-previous-window-configuration (current-window-configuration))
+  (remove-hook 'ediff-before-setup-hook #'ztree-diff-ediff-before-setup-hook-function))
+
+(defun ztree-diff-ediff-quit-hook-function ()
+  "Hook function for `ediff-quit-hook'.
+
+See the Info node `(ediff) hooks'.
+
+This hook function removes itself."
+  (set-window-configuration ztree-diff--ediff-previous-window-configuration)
+  (remove-hook 'ediff-quit-hook #'ztree-diff-ediff-quit-hook-function))
+
+(defun ztree-diff-ediff (file-a file-b &optional startup-hooks)
+  "Ediff that cleans up after itself.
+
+Ediff-related buffers are killed and the pre-Ediff window
+configuration is restored."
+  (add-hook 'ediff-before-setup-hook #'ztree-diff-ediff-before-setup-hook-function)
+  (add-hook 'ediff-quit-hook #'ztree-diff-ediff-quit-hook-function t)
+  (ediff file-a file-b startup-hooks))
+
 (defun ztree-diff-node-action (node hard)
   "Perform action on NODE:
 1 if both left and right sides present:
@@ -243,7 +272,7 @@ Argument NODE node containing paths to files to call a diff on."
            (if (eql (ztree-diff-node-different node) 'same)
                (funcall open-f left)
              (if hard
-                 (ediff left right)
+                 (ztree-diff-ediff left right)
                (ztree-diff-simple-diff node))))
           (left (funcall open-f left))
           (right (funcall open-f right))
