@@ -241,7 +241,6 @@ This hook function removes itself."
 See the Info node `(ediff) hooks'.
 
 This hook function removes itself."
-  (ediff-kill-buffer-carefully ediff-registry-buffer)
   (set-window-configuration ztree-diff--ediff-previous-window-configuration)
   (remove-hook 'ediff-quit-hook #'ztree-diff-ediff-quit-hook-function))
 
