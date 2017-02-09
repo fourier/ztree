@@ -92,6 +92,12 @@ By default paths starting with dot (like .git) are ignored")
 (defvar-local ztree-diff-show-filtered-files nil
   "Show or not files from the filtered list.")
 
+(defvar-local ztree-diff-show-right-orphan-files t
+  "Show or not orphan files/directories on right side.")
+
+(defvar-local ztree-diff-show-left-orphan-files t
+  "Show or not orphan files/directories on left side.")
+
 (defvar-local ztree-diff-wait-message nil
   "Message showing while constructing the diff tree.")
 
@@ -502,9 +508,13 @@ unless it is a parent node."
     ;; visible then
     ;; either it is a root. root have no parent
     (or (not (ztree-diff-node-parent node))    ; parent is always visible
-        ;; or the files are different or orphan
-        (or (eql diff 'new)
-            (eql diff 'diff))
+        ;; or the files are different
+        (eql diff 'diff)
+        ;; or it is orphaned, but show orphaned files for now
+        (and (eql diff 'new)
+             (if (ztree-diff-node-left-path node)
+                 ztree-diff-show-left-orphan-files
+               ztree-diff-show-right-orphan-files))
         ;; or it is ignored but we show ignored for now
         (and (eql diff 'ignore)
              ztree-diff-show-filtered-files)
@@ -512,20 +522,30 @@ unless it is a parent node."
         (and (eql diff 'same)
              ztree-diff-show-equal-files))))
 
-(defun ztree-diff-toggle-show-equal-files ()
-  "Toggle visibility of the equal files."
-  (interactive)
-  (setq ztree-diff-show-equal-files (not ztree-diff-show-equal-files))
-  (message (concat (if ztree-diff-show-equal-files "Show" "Hide") " equal files"))
-  (ztree-refresh-buffer))
+(defmacro ztree-diff-define-toggle-show (what)
+  (let ((funcsymbol (intern (concat "ztree-diff-toggle-show-" what "-files")))
+        (variable (intern (concat "ztree-diff-show-" what "-files")))
+        (fundesc (concat "Toggle visibility of the " what " files/directories")))
+    `(defun ,funcsymbol ()
+       ,fundesc
+       (interactive)
+       (setq ,variable (not ,variable))
+       (message (concat (if ,variable "Show " "Hide ") ,what " files"))
+       (ztree-refresh-buffer))))
 
-(defun ztree-diff-toggle-show-filtered-files ()
-  "Toggle visibility of the filtered files."
-  (interactive)
-  (setq ztree-diff-show-filtered-files (not ztree-diff-show-filtered-files))
-  (message (concat (if ztree-diff-show-filtered-files "Show" "Hide") " filtered files"))
-  (ztree-refresh-buffer))
+(ztree-diff-define-toggle-show "equal")
+(ztree-diff-define-toggle-show "filtered")
+(ztree-diff-define-toggle-show "left-orphan")
+(ztree-diff-define-toggle-show "right-orphan")
 
+(defun ztree-diff-toggle-show-orphan-files ()
+  "Toggle visibility of left and right orphan files."
+  (interactive)
+  (let ((show (not ztree-diff-show-left-orphan-files)))
+    (setq ztree-diff-show-left-orphan-files show)
+    (setq ztree-diff-show-right-orphan-files show)
+    (message (concat (if show "Show" "Hide") " orphan files"))
+    (ztree-refresh-buffer)))
 
 (defun ztree-diff-update-wait-message (&optional msg)
   "Update the wait message MSG with one more `.' progress indication."
