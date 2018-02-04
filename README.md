@@ -80,6 +80,7 @@ M-x ztree-dir
 * To toggle open/closed state of the subtree of the current directory, hit the `x` key.
 * To visit a file, press `Space` key.
 * To open file in other window, use `RET` key.
+* To open `Dired` with the directory the point is currently on, use the `d` key.
 
 ### Customizations
 Set the `ztree-dir-move-focus` variable to `t` in order to move focus to the other window when the `RET` key is pressed; the default behavior is to keep focus in `ztree-dir` window.

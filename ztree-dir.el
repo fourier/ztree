@@ -1,6 +1,6 @@
 ;;; ztree-dir.el --- Text mode directory tree -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2018  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;;
@@ -97,7 +97,8 @@ One could add own filters in the following way:
   `(
     (,(kbd "H") . ztree-dir-toggle-show-filtered-files)
     (,(kbd ">") . ztree-dir-narrow-to-dir)
-    (,(kbd "<") . ztree-dir-widen-to-parent)))
+    (,(kbd "<") . ztree-dir-widen-to-parent)
+    (,(kbd "d") . ztree-dir-open-dired-at-point)))
 
 
 
@@ -179,6 +180,19 @@ up of the opened."
     (when parent
       (ztree-change-start-node parent))))
 
+
+(defun ztree-dir-open-dired-at-point ()
+  "If the point is on a directory, open DIRED with this directory.
+Otherwise open DIRED with the parent directory"
+  (interactive)
+  (let* ((line (line-number-at-pos))
+         (node (ztree-find-node-in-line line))
+         (parent (ztree-get-parent-for-line line)))
+    (cond ((and node (file-directory-p node))
+           (dired node))
+          (parent 
+           (dired (ztree-find-node-in-line parent))))))
+  
 
 ;;;###autoload
 (defun ztree-dir (path)
