@@ -45,7 +45,7 @@
 
 (require 'ztree-util)
 (require 'ztree-view)
-(require 'cl-lib)
+(eval-when-compile (require 'cl-lib))
 
 ;;
 ;; Constants

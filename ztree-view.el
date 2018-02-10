@@ -51,6 +51,9 @@
 (defvar ztree-draw-unicode-lines nil
   "If set forces ztree to draw lines with unicode characters.")
 
+(defvar ztree-show-number-of-children nil
+  "If set forces ztree show number of child entries in the braces.")
+
 (defvar-local ztree-expanded-nodes-list nil
   "A list of Expanded nodes (i.e. directories) entries.")
 
@@ -157,6 +160,13 @@ the buffer is split to 2 trees")
   "*Face used for expand sign [+] in Ztree buffer."
   :group 'Ztree :group 'font-lock-highlighting-faces)
 (defvar ztreep-expand-sign-face 'ztreep-expand-sign-face)
+
+(defface ztreep-node-count-children-face
+  '((t                   (:inherit 'font-lock-comment-face :slant italic)))
+  "*Face used for count of number of child entries in Ztree buffer."
+  :group 'Ztree :group 'font-lock-highlighting-faces)
+(defvar ztreep-node-count-children-face 'ztreep-node-count-children-face)
+
 
 
 ;;;###autoload
@@ -527,19 +537,39 @@ Argument PATH start node."
     (if ztree-node-side-fun           ; 2-sided tree
         (let ((right-short-name (funcall ztree-node-short-name-fun node t))
               (side (funcall ztree-node-side-fun node))
-              (width (window-width)))
+              (width (window-width))
+              (count-children-left
+               (when ztree-show-number-of-children
+                 (length (cl-remove-if (lambda (n)
+                                         (eql
+                                          (funcall ztree-node-side-fun n)
+                                          'right))
+                                       (funcall ztree-node-contents-fun node)))))
+              (count-children-right
+               (when ztree-show-number-of-children
+                 (length (cl-remove-if (lambda (n)
+                                         (eql
+                                          (funcall ztree-node-side-fun n)
+                                          'left))
+                          (funcall ztree-node-contents-fun node))))))
           (when (eq side 'left)  (setq right-short-name ""))
           (when (eq side 'right) (setq short-name ""))
           (ztree-insert-single-entry short-name depth
                                      expandable expanded 0
+                                     count-children-left
                                      (when ztree-node-face-fun
                                        (funcall ztree-node-face-fun node)))
           (ztree-insert-single-entry right-short-name depth
                                      expandable expanded (1+ (/ width 2))
+                                     count-children-right
                                      (when ztree-node-face-fun
                                        (funcall ztree-node-face-fun node)))
           (puthash line side ztree-line-tree-properties))
-      (ztree-insert-single-entry short-name depth expandable expanded 0))
+      (ztree-insert-single-entry short-name depth
+                                 expandable expanded
+                                 0 (when expandable
+                                     (length
+                                      (funcall ztree-node-contents-fun node)))))
     (puthash line node ztree-line-to-node-table)
     (insert "\n")
     line))
@@ -547,10 +577,13 @@ Argument PATH start node."
 (defun ztree-insert-single-entry (short-name depth
                                              expandable expanded
                                              offset
+                                             count-children
                                              &optional face)
   "Writes a SHORT-NAME in a proper position with the type given.
 Writes a string with given DEPTH, prefixed with [ ] if EXPANDABLE
 and [-] or [+] depending on if it is EXPANDED from the specified OFFSET.
+If `ztree-show-number-of-children' is set to t the COUNT-CHILDREN
+argument is used to present number of entries in the expandable item.
 Optional argument FACE face to write text with."
   (let ((node-sign #'(lambda (exp)
                        (let ((sign (concat "[" (if exp "-" "+") "]")))
@@ -577,7 +610,12 @@ Optional argument FACE face to write text with."
             (funcall node-sign expanded))   ; for expandable nodes insert "[+/-]"
         ;; indentation for leafs 4 spaces from the node name
         (insert-char ?\s (- 4 (- (point) start-pos))))
-      (insert (propertize short-name 'font-lock-face entry-face)))))
+      (insert (propertize short-name 'font-lock-face entry-face))
+      ;; optionally add number of children in braces
+      (when (and ztree-show-number-of-children expandable)
+        (let ((count-str (format " [%d]" count-children)))
+          (insert (propertize count-str 'font-lock-face ztreep-node-count-children-face)))))))
+        
 
 
 
