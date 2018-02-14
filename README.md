@@ -58,6 +58,8 @@ By default all files starting with dot (like `.gitignore`) are not shown and exc
 
 One also could turn on unicode characters to draw the tree with instead of normal ASCII-characters. This is controlled by the `ztree-draw-unicode-lines` variable.
 
+The variable `ztree-diff-consider-file-permissions` (which is `nil` by default) if set to `t` allows to compare file attributes as well, the files will be considered different if they have different mode.
+
 ### Screenshots
 
 ![ztreediff emacsx11](https://github.com/fourier/ztree/raw/screenshots/screenshots/emacs_diff_xterm.png "Emacs in xterm with ztree-diff")

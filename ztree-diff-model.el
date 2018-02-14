@@ -33,6 +33,9 @@
 (require 'ztree-util)
 (eval-when-compile (require 'cl-lib))
 
+(defvar ztree-diff-consider-file-permissions nil
+  "Mark files as different if their permissions are different")
+
 (defvar-local ztree-diff-model-ignore-fun nil
   "Function which determines if the node should be excluded from comparison.")
 
@@ -147,7 +150,10 @@ Returns t if equal."
          (file2-untrampified (ztree-untrampify-filename file2)))
     (if (or
          (/= (nth 7 (file-attributes file1))
-            (nth 7 (file-attributes file2)))
+             (nth 7 (file-attributes file2)))
+         (and ztree-diff-consider-file-permissions
+              (not (string-equal (nth 8 (file-attributes file1))
+                                 (nth 8 (file-attributes file2)))))
          (/= 0 (process-file diff-command nil nil nil "-q"
                            file1-untrampified
                            file2-untrampified)))
