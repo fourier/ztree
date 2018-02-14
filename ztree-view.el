@@ -80,6 +80,10 @@ Used in order to not to use cl package and `lexical-let'")
 Used for 2-side trees, to determine if the node exists on left or right
 or both sides")
 
+(defvar-local ztree-prev-position nil
+  "The cons pair of the previous line and column. Used
+to restore cursor position after refresh")
+
 (defvar-local ztree-tree-header-fun nil
   "Function inserting the header into the tree buffer.
 MUST inster newline at the end!")
@@ -638,18 +642,35 @@ Optional argument LINE scroll to the line given."
   (interactive)
   (when (and (equal major-mode 'ztree-mode)
              (boundp 'ztree-start-node))
-    (setq ztree-line-to-node-table (make-hash-table))
-    ;; create a hash table of node properties for line
-    ;; used in 2-side tree mode
-    (when ztree-node-side-fun
-      (setq ztree-line-tree-properties (make-hash-table)))
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (funcall ztree-tree-header-fun)
-      (setq ztree-start-line (line-number-at-pos (point)))
-      (ztree-insert-node-contents ztree-start-node))
-    (ztree-scroll-to-line (if line line ztree-start-line))))
+    (let ((prev-pos ztree-prev-position))
+      (setq ztree-line-to-node-table (make-hash-table))
+      ;; create a hash table of node properties for line
+      ;; used in 2-side tree mode
+      (when ztree-node-side-fun
+        (setq ztree-line-tree-properties (make-hash-table)))
+      (let ((inhibit-read-only t))
+        (setq ztree-prev-position (cons (line-number-at-pos (point))
+                                        (current-column)))
+        (erase-buffer)
+        (funcall ztree-tree-header-fun)
+        (setq ztree-start-line (line-number-at-pos (point)))
+        (ztree-insert-node-contents ztree-start-node)
+        (cond (line ;; local refresh, scroll to line
+               (ztree-scroll-to-line line)
+               (when prev-pos
+                 (beginning-of-line)
+                 (goto-char (+ (cdr ztree-prev-position) (point)))))
+              ((and (null line) (null prev-pos)) ;; first refresh
+               (ztree-scroll-to-line ztree-start-line)
+               (setq ztree-prev-position (cons (line-number-at-pos (point))
+                                               (current-column))))
+              ((and (null line) prev-pos) ;; not first refresh
+               ;; restore cursor position if possible
+               (ztree-scroll-to-line (car ztree-prev-position))
+               (beginning-of-line)
+               (goto-char (+ (cdr ztree-prev-position) (point)))))))))
 
+             
 
 (defun ztree-change-start-node (node)
   "Refresh the buffer setting the new root NODE.
