@@ -62,6 +62,9 @@ By default all filest starting with dot `.', including . and ..")
 (defvar ztree-dir-move-focus nil
   "Defines if move focus to opened window on hard-action command (RETURN) on a file.")
 
+(defvar ztree-dir-info-timer 0.5
+  "Specifies the time after which to present the information about a current file")
+
 (defvar-local ztree-dir-filter-list (list ztree-hidden-files-regexp)
   "List of regexp file names to filter out.
 By default paths starting with dot (like .git) are ignored.
@@ -72,6 +75,16 @@ One could add own filters in the following way:
 
 (defvar-local ztree-dir-show-filtered-files nil
   "Show or not files from the filtered list.")
+
+;;
+;; Operational variables
+;; 
+
+(defvar-local ztree-dir-timer nil
+  "Idle timer used to show information about files in minibuffer.")
+
+(defvar-local ztree-dir-last-message nil
+  "Saves the last message in minibuffer in ztree-dir mode")
 
 
 ;;
@@ -98,10 +111,57 @@ One could add own filters in the following way:
     (,(kbd "H") . ztree-dir-toggle-show-filtered-files)
     (,(kbd ">") . ztree-dir-narrow-to-dir)
     (,(kbd "<") . ztree-dir-widen-to-parent)
-    (,(kbd "d") . ztree-dir-open-dired-at-point)))
+    (,(kbd "d") . ztree-dir-open-dired-at-point))
+  (cond
+   (ztreedir-mode
+    (add-hook 'post-command-hook 'ztree-dir-schedule-timer nil t)
+    (add-hook 'pre-command-hook 'ztree-dir-pre-command-refresh-echo-area nil t))
+   (t
+    (remove-hook 'post-command-hook 'ztree-dir-schedule-timer t)
+    (remove-hook 'pre-command-hook 'ztree-dir-pre-command-refresh-echo-area t))))
+
+;; the implementation is based on message implementation in eldoc
+;; hence we use some of its functions.
+(defun ztree-dir-schedule-timer ()
+  "Schedule a timer which will present a text about a current file
+after `ztree-dir-info-timer' timeout.
+This is a hook which called after the interactive command."
+  (setq ztree-dir-timer
+        (run-with-idle-timer
+         ztree-dir-info-timer nil
+         (lambda ()
+           (when (and ztreedir-mode
+                      (eldoc-display-message-no-interference-p)
+                      (not this-command)
+                      (eldoc--message-command-p last-command))
+             (ztree-dir-message-current-file-info)))))
+  t)
 
 
+(defun ztree-dir-pre-command-refresh-echo-area ()
+  "Print previous message before executing the command."
+  (when (and ztree-dir-last-message     ;; last command printed
+             (not (minibufferp))            ;; not in minibuffer
+             ;; not inside a keyboard macro or debugger
+         (eldoc-display-message-no-interference-p) 
+         ;; a current command is a one of motion commands
+         (eldoc--message-command-p this-command))
+    ;; print and clear the last message
+    (ztree-dir-message ztree-dir-last-message)
+    (setq ztre-dir-last-message nil)))
 
+
+(defun ztree-dir-message (message)
+  "Present a message in minibuffer but don't add it to *Messages*"
+  (let ((message-log-max nil))
+    (setf ztree-dir-last-message message)
+    (minibuffer-message ztree-dir-last-message)))
+
+(defun ztree-dir-message-current-file-info ()
+  (let ((line (line-number-at-pos)))
+    (when-let (node (ztree-find-node-in-line line))
+      (and (not (file-directory-p node))
+           (ztree-dir-message node)))));;(nth 8 (file-attributes node)))))))
 
 ;;
 ;; File bindings to the directory tree control
@@ -192,7 +252,9 @@ Otherwise open DIRED with the parent directory"
            (dired node))
           (parent 
            (dired (ztree-find-node-in-line parent))))))
-  
+
+
+
 
 ;;;###autoload
 (defun ztree-dir (path)
