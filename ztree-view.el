@@ -677,7 +677,10 @@ Optional argument LINE scroll to the line given."
 This will reuse all other settings for the current ztree buffer, but
 change the root node to the node specified."
   (setq ztree-start-node node
-        ztree-expanded-nodes-list (list ztree-start-node))
+        ztree-expanded-nodes-list (list ztree-start-node)
+        ;; then the new root node is given, no sense to preserve
+        ;; a cursor position
+        ztree-prev-position nil)
   (ztree-refresh-buffer))
 
 
