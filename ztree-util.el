@@ -87,12 +87,6 @@ Used since `car-safe' returns nil for atoms"
     (string-equal file1-remote file2-remote)))
 
 
-(defun ztree-scroll-to-line (line)
-  "Recommended way to set the cursor to specified LINE."
-  (goto-char (point-min))
-  (forward-line (1- line)))
-
-
 (provide 'ztree-util)
 
 ;;; ztree-util.el ends here
