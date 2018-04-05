@@ -155,6 +155,12 @@ Otherwise, the ztree window is used to find the file."
                 (directory-files path 'full)))
 
 
+(defun ztree-dir-change-directory (node)
+  "Change the start node to NODE and update current directory."
+  (ztree-change-start-node node)
+  (setq default-directory node))
+
+
 (defun ztree-dir-narrow-to-dir ()
   "Interactive command to narrow the current directory buffer.
 The buffer is narrowed to the directory under the cursor.
@@ -164,9 +170,9 @@ If the cursor is on a file, the buffer is narrowed to the parent directory."
          (node (ztree-find-node-in-line line))
          (parent (ztree-get-parent-for-line line)))
     (if (file-directory-p node)
-        (ztree-change-start-node node)
+        (ztree-dir-change-directory node)
       (when parent
-        (ztree-change-start-node (ztree-find-node-in-line parent))))))
+        (ztree-dir-change-directory (ztree-find-node-in-line parent))))))
 
 
 (defun ztree-dir-widen-to-parent ()
@@ -178,7 +184,7 @@ up of the opened."
   (let* ((node ztree-start-node)
          (parent (file-name-directory (directory-file-name node))))
     (when parent
-      (ztree-change-start-node parent))))
+      (ztree-dir-change-directory parent))))
 
 
 (defun ztree-dir-open-dired-at-point ()
