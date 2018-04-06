@@ -133,7 +133,6 @@ the buffer is split to 2 trees")
     (define-key map (kbd "x") 'ztree-toggle-expand-subtree)
     (define-key map [remap next-line] 'ztree-next-line)
     (define-key map [remap previous-line] 'ztree-previous-line)
-
     (if window-system
         (define-key map (kbd "<backspace>") 'ztree-move-up-in-tree)
       (define-key map "\177" 'ztree-move-up-in-tree))
@@ -189,14 +188,23 @@ the buffer is split to 2 trees")
 
 (defun ztree-scroll-to-line (line)
   "Set the cursor to specified LINE and to the text offset (if possible)."
-  (goto-char (point-min))
-  (forward-line (1- line))
-  (when-let (offset (plist-get
-                     (gethash (line-number-at-pos)
-                              ztree-line-tree-properties)
-                       'offset))
-      (beginning-of-line)
-      (goto-char (+ (point) offset))))
+  (let ((cur-pos (current-column))
+        (center (/ (window-width) 2))
+        (cur-line (line-number-at-pos)))
+    ;; based on dired-next-line
+    ;; set line-move to move by logical lines
+    (let ((line-move-visual)
+          (goal-column))
+      (line-move (- line cur-line) t)
+      (when-let (offset (plist-get
+                         (gethash (line-number-at-pos)
+                                  ztree-line-tree-properties)
+                         'offset))
+        (when (and ztree-node-side-fun
+                   (>= (current-column) center))
+          (incf offset (1+ center)))
+        (beginning-of-line)
+        (goto-char (+ (point) offset))))))
 
 
 (defun ztree-find-node-in-line (line)
@@ -654,8 +662,6 @@ Returns the position where the text starts."
         (let ((count-str (format " [%d]" count-children)))
           (insert (propertize count-str 'font-lock-face ztreep-node-count-children-face)))))
     result))
-        
-
 
 
 (defun ztree-jump-side ()
@@ -663,12 +669,11 @@ Returns the position where the text starts."
   (interactive)
   (when ztree-node-side-fun             ; 2-sided tree
     (let ((center (/ (window-width) 2)))
-      (cond ((< (current-column) center)
-             (move-to-column (1+ center)))
-            ((> (current-column) center)
-             (move-to-column 1))
-            (t nil)))))
-
+      (if (< (current-column) center)
+          (move-to-column (1+ center))
+        (move-to-column 1))
+      ;; just recalculate and move to proper column
+      (ztree-scroll-to-line (line-number-at-pos)))))
 
 
 (defun ztree-refresh-buffer (&optional line)
@@ -730,31 +735,8 @@ change the root node to the node specified."
 
 (defun ztree-move-line (count)
   "Move the point COUNT lines and place at the beginning of the node."
-  ;; based on dired-next-line
-  ;; set line-move to move by logical lines
-  (let ((line-move-visual)
-        (goal-column))
-    (line-move count t))
-  ;; We never want to move point into an invisible line.
-  (while (and (invisible-p (point))
-	      (not (if (and count (< count 0)) (bobp) (eobp))))
-    (forward-char (if (and count (< count 0)) -1 1)))
-  ;; find the column position to place cursor
-  (when-let (offset (plist-get
-                       (gethash (line-number-at-pos)
-                                ztree-line-tree-properties)
-                       'offset))
-    (if (not ztree-node-side-fun)       ; one sided view
-        (progn
-          ;; now move the point to the beginning of the text          
-          (beginning-of-line)
-          (goto-char (+ (point) offset)))
-      (let ((center (/ (window-width) 2)))
-        (cond ((< (current-column) center)
-               (move-to-column 1))               
-              ((> (current-column) center)
-               (move-to-column (1+ center)))
-              (t nil))))))
+  (ztree-scroll-to-line
+   (+ count (line-number-at-pos))))
 
 (defun ztree-view (
                    buffer-name
