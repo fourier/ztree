@@ -42,6 +42,7 @@
 ;;
 ;;; Code:
 
+(require 'subr-x)
 (require 'ztree-util)
 
 ;;
