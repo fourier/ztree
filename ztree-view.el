@@ -567,25 +567,29 @@ Argument PATH start node."
          ;; with the offset of the text and relevant side information
          (line-properties (gethash line ztree-line-tree-properties))
          (expandable (funcall ztree-node-is-expandable-fun node))
-         (short-name (funcall ztree-node-short-name-fun node)))
+         (short-name (funcall ztree-node-short-name-fun node))
+         (count-children-left 
+          (when (and expandable ztree-show-number-of-children)
+            (ignore-errors
+              (length (cl-remove-if (lambda (n)
+                                      (and ztree-node-side-fun
+                                           (eql 
+                                            (funcall ztree-node-side-fun n)
+                                            'right)))
+                                    (funcall ztree-node-contents-fun node))))))
+         (count-children-right
+          (when (and expandable ztree-show-number-of-children)
+            (ignore-errors
+              (length (cl-remove-if (lambda (n)
+                                      (and ztree-node-side-fun
+                                           (eql
+                                            (funcall ztree-node-side-fun n)
+                                            'left)))
+                                    (funcall ztree-node-contents-fun node)))))))
     (if ztree-node-side-fun           ; 2-sided tree
         (let ((right-short-name (funcall ztree-node-short-name-fun node t))
               (side (funcall ztree-node-side-fun node))
-              (width (window-width))
-              (count-children-left
-               (when ztree-show-number-of-children
-                 (length (cl-remove-if (lambda (n)
-                                         (eql
-                                          (funcall ztree-node-side-fun n)
-                                          'right))
-                                       (funcall ztree-node-contents-fun node)))))
-              (count-children-right
-               (when ztree-show-number-of-children
-                 (length (cl-remove-if (lambda (n)
-                                         (eql
-                                          (funcall ztree-node-side-fun n)
-                                          'left))
-                          (funcall ztree-node-contents-fun node))))))
+              (width (window-width)))
           (when (eq side 'left)  (setq right-short-name ""))
           (when (eq side 'right) (setq short-name ""))
           (setq line-properties
@@ -608,8 +612,7 @@ Argument PATH start node."
                                        (ztree-insert-single-entry short-name depth
                                                                   expandable expanded
                                                                   0 (when expandable
-                                                                      (length
-                                                                       (funcall ztree-node-contents-fun node)))))))
+                                                                      count-children-left)))))
     (puthash line node ztree-line-to-node-table)
     ;; save the properties for the line - side and text offset
     (puthash line line-properties ztree-line-tree-properties)
@@ -626,6 +629,8 @@ Writes a string with given DEPTH, prefixed with [ ] if EXPANDABLE
 and [-] or [+] depending on if it is EXPANDED from the specified OFFSET.
 If `ztree-show-number-of-children' is set to t the COUNT-CHILDREN
 argument is used to present number of entries in the expandable item.
+COUNT-CHILDREN might be null if the contents of expandable node are
+not accessible.
 Optional argument FACE face to write text with.
 Returns the position where the text starts."
   (let ((result 0)
@@ -659,7 +664,8 @@ Returns the position where the text starts."
       (insert (propertize short-name 'font-lock-face entry-face))
       ;; optionally add number of children in braces
       (when (and ztree-show-number-of-children expandable)
-        (let ((count-str (format " [%d]" count-children)))
+        (let ((count-str (format " [%s]"
+                                 (if count-children (number-to-string count-children) "N/A"))))
           (insert (propertize count-str 'font-lock-face ztreep-node-count-children-face)))))
     result))
 
