@@ -745,6 +745,16 @@ change the root node to the node specified."
   (ztree-scroll-to-line
    (+ count (line-number-at-pos))))
 
+;;;###autoload
+(defun ztree-view-on-window-configuration-changed ()
+  "Hook called then window configuration changed to resize buffer's contents"
+  ;; refresh visible ztree buffers
+  (walk-windows (lambda (win) 
+                  (with-current-buffer (window-buffer win)
+                    (when (derived-mode-p 'ztree-mode)
+                      (ztree-refresh-buffer))))
+                nil 'visible))
+
 (defun ztree-view (
                    buffer-name
                    start-node
@@ -788,6 +798,7 @@ Optional argument NODE-SIDE-FUN Determines the side of the node."
     (setq ztree-node-face-fun face-fun)
     (setq ztree-node-action-fun action-fun)
     (setq ztree-node-side-fun node-side-fun)
+    (add-hook 'window-configuration-change-hook #'ztree-view-on-window-configuration-changed)
     (ztree-refresh-buffer)))
 
 

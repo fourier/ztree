@@ -28,6 +28,7 @@
 ;;; Commentary:
 
 ;;; Code:
+(eval-when-compile (require 'cl))
 (require 'ztree-view)
 (require 'ztree-diff-model)
 
@@ -101,8 +102,10 @@ By default paths starting with dot (like .git) are ignored")
 (defvar-local ztree-diff-wait-message nil
   "Message showing while constructing the diff tree.")
 
-(defvar-local ztree-diff-ediff-previous-window-configuration nil
-  "Window configuration prior to calling `ediff'.")
+(defvar ztree-diff-ediff-previous-window-configurations nil
+  "Window configurations prior to calling `ediff'.
+A queue of window configurations, allowing
+to restore last configuration even if there were a couple of ediff sessions")
 
 ;;;###autoload
 (define-minor-mode ztreediff-mode
@@ -238,7 +241,8 @@ Argument NODE node containing paths to files to call a diff on."
 See the Info node `(ediff) hooks'.
 
 This hook function removes itself."
-  (setq ztree-diff-ediff-previous-window-configuration (current-window-configuration))
+  (push (current-window-configuration) ztree-diff-ediff-previous-window-configurations)
+  (setq ztree-prev-position (cons (line-number-at-pos (point)) (current-column)))
   (remove-hook 'ediff-before-setup-hook #'ztree-diff-ediff-before-setup-hook-function))
 
 (defun ztree-diff-ediff-quit-hook-function ()
@@ -247,7 +251,8 @@ This hook function removes itself."
 See the Info node `(ediff) hooks'.
 
 This hook function removes itself."
-  (set-window-configuration ztree-diff-ediff-previous-window-configuration)
+  (set-window-configuration (pop ztree-diff-ediff-previous-window-configurations))
+  (ztree-refresh-buffer)
   (remove-hook 'ediff-quit-hook #'ztree-diff-ediff-quit-hook-function))
 
 (defun ztree-diff-ediff (file-a file-b &optional startup-hooks)
