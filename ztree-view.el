@@ -42,6 +42,7 @@
 ;;
 ;;; Code:
 
+(eval-when-compile (require 'cl))
 (require 'subr-x)
 (require 'ztree-util)
 
@@ -189,8 +190,7 @@ the buffer is split to 2 trees")
 
 (defun ztree-scroll-to-line (line)
   "Set the cursor to specified LINE and to the text offset (if possible)."
-  (let ((cur-pos (current-column))
-        (center (/ (window-width) 2))
+  (let ((center (/ (window-width) 2))
         (cur-line (line-number-at-pos)))
     ;; based on dired-next-line
     ;; set line-move to move by logical lines
