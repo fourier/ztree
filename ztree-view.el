@@ -683,6 +683,12 @@ Returns the position where the text starts."
       (ztree-scroll-to-line (line-number-at-pos)))))
 
 
+(defun ztree-save-current-position ()
+  "Save the current position into the global variable."
+  (setq ztree-prev-position (cons (line-number-at-pos (point))
+                                  (current-column))))
+
+
 (defun ztree-refresh-buffer (&optional line)
   "Refresh the buffer.
 Optional argument LINE scroll to the line given."
@@ -694,8 +700,7 @@ Optional argument LINE scroll to the line given."
       ;; create a hash table of node properties for line
       (setq ztree-line-tree-properties (make-hash-table))
       (let ((inhibit-read-only t))
-        (setq ztree-prev-position (cons (line-number-at-pos (point))
-                                        (current-column)))
+        (ztree-save-current-position)
         (erase-buffer)
         (funcall ztree-tree-header-fun)
         (setq ztree-start-line (line-number-at-pos (point)))
@@ -707,8 +712,7 @@ Optional argument LINE scroll to the line given."
                  (goto-char (+ (cdr ztree-prev-position) (point)))))
               ((and (null line) (null prev-pos)) ;; first refresh
                (ztree-scroll-to-line ztree-start-line)
-               (setq ztree-prev-position (cons (line-number-at-pos (point))
-                                               (current-column))))
+               (ztree-save-current-position))
               ((and (null line) prev-pos) ;; not first refresh
                ;; restore cursor position if possible
                (ztree-scroll-to-line (car ztree-prev-position))

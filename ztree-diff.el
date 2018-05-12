@@ -242,7 +242,7 @@ See the Info node `(ediff) hooks'.
 
 This hook function removes itself."
   (push (current-window-configuration) ztree-diff-ediff-previous-window-configurations)
-  (setq ztree-prev-position (cons (line-number-at-pos (point)) (current-column)))
+  (ztree-save-current-position)
   (remove-hook 'ediff-before-setup-hook #'ztree-diff-ediff-before-setup-hook-function))
 
 (defun ztree-diff-ediff-quit-hook-function ()
@@ -272,6 +272,9 @@ configuration is restored."
       1.1.2 simple diff otherwiste
    1.2 if they are the same - view left
 2 if left or right present - view left or rigth"
+  ;; save current position in case if the window
+  ;; configuration will change
+  (ztree-save-current-position)
   (let ((left (ztree-diff-node-left-path node))
         (right (ztree-diff-node-right-path node))
         ;; FIXME: The GNU convention is to only use "path" for lists of

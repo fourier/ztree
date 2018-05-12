@@ -36,6 +36,13 @@
 (defvar ztree-diff-consider-file-permissions nil
   "Mark files as different if their permissions are different")
 
+(defvar ztree-diff-additional-options nil
+  "Command-line options for the diff program used as a diff backend. These options are added to default '-q' option.
+Should be a list of strings.
+Example:
+(setq ztree-diff-options '(\"-w\" \"-i\"))")
+
+
 (defvar-local ztree-diff-model-ignore-fun nil
   "Function which determines if the node should be excluded from comparison.")
 
@@ -154,9 +161,12 @@ Returns t if equal."
          (and ztree-diff-consider-file-permissions
               (not (string-equal (nth 8 (file-attributes file1))
                                  (nth 8 (file-attributes file2)))))
-         (/= 0 (process-file diff-command nil nil nil "-q"
-                           file1-untrampified
-                           file2-untrampified)))
+         (/= 0
+             (apply #'process-file
+                    diff-command nil nil nil
+                    `("-q" ,@ztree-diff-additional-options
+                      ,file1-untrampified
+                      ,file2-untrampified))))
         'diff
       'same)))
 
