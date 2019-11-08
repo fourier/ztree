@@ -36,6 +36,9 @@
 (defvar ztree-diff-consider-file-permissions nil
   "Mark files as different if their permissions are different")
 
+(defvar ztree-diff-consider-file-size t
+  "Mark files as different if their size different")
+
 (defvar ztree-diff-additional-options nil
   "Command-line options for the diff program used as a diff backend. These options are added to default '-q' option.
 Should be a list of strings.
@@ -156,8 +159,9 @@ Returns t if equal."
   (let* ((file1-untrampified (ztree-untrampify-filename file1))
          (file2-untrampified (ztree-untrampify-filename file2)))
     (if (or
-         (/= (nth 7 (file-attributes file1))
-             (nth 7 (file-attributes file2)))
+         (and ztree-diff-consider-file-size
+              (/= (nth 7 (file-attributes file1))
+              (nth 7 (file-attributes file2))))
          (and ztree-diff-consider-file-permissions
               (not (string-equal (nth 8 (file-attributes file1))
                                  (nth 8 (file-attributes file2)))))
