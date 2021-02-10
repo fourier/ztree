@@ -203,7 +203,7 @@ the buffer is split to 2 trees")
                          'offset))
         (when (and ztree-node-side-fun
                    (>= (current-column) center))
-          (incf offset (1+ center)))
+          (cl-incf offset (1+ center)))
         (beginning-of-line)
         (goto-char (+ (point) offset))))))
 
