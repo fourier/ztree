@@ -1,6 +1,6 @@
 ;;; ztree-diff.el --- Text mode diff for directory trees -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013-2016  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2021  Free Software Foundation, Inc.
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;;
@@ -28,7 +28,7 @@
 ;;; Commentary:
 
 ;;; Code:
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 (require 'ztree-view)
 (require 'ztree-diff-model)
 
