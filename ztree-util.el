@@ -28,6 +28,26 @@
 ;;; Commentary:
 
 ;;; Code:
+
+
+(defmacro def-ztree-local-fun (name doc)
+  "Create a buffer-local variable NAME-FUN and a function NAME.
+Both variables and a function will have a documentation DOC.
+Function will FUNCALL the variable NAME-FUN.
+Used to create callbacks.
+Example:
+(macroexpand-1 '(def-ztree-local-fun add \"Addition\"))
+(progn
+  (defvar-local add-fun nil \"Addition\")
+  (defun add (&rest args) \"Addition\" (apply add-fun args)))"
+  (let ((var (intern (concat (symbol-name name) "-fun"))))
+    `(progn
+       (defvar-local ,var nil
+         ,doc)
+       (defun ,name (&rest args)
+         ,doc
+         (apply ,var args)))))
+
 (defun ztree-find (where which)
   "Find element of the list WHERE matching predicate WHICH."
   (catch 'found
