@@ -45,6 +45,7 @@
 
 (require 'ztree-util)
 (require 'ztree-view)
+(require 'ztree-protocol)
 (eval-when-compile (require 'cl-lib))
 
 ;;
@@ -198,7 +199,42 @@ Otherwise open DIRED with the parent directory"
            (dired node))
           (parent 
            (dired (ztree-find-node-in-line parent))))))
-  
+
+;;
+;; Implementation of the ztree-protocol
+;;
+
+(cl-defmethod ztree-node-visible-p ((file string))
+  "Return T if the NODE shall be visible."
+  (ztree-file-not-hidden file))
+
+(cl-defmethod ztree-node-short-name ((file string))
+  "Return the short name for a node."
+  (ztree-file-short-name file))
+
+(cl-defmethod ztree-node-expandable-p ((file string))
+  "Return T if the node is expandable."
+  (file-directory-p file))
+
+(cl-defmethod ztree-node-equal ((file1 string) (file2 string))
+  "Equality function for NODE1 and NODE2.
+Return T if nodes are equal"
+  (string-equal file1 file2))
+
+(cl-defmethod ztree-node-children ((file string))
+  "Return a list of NODE children"
+  (ztree-dir-directory-files file))
+
+(cl-defmethod ztree-node-action ((file string) hard)
+  "Perform an action when the Return is pressed on a NODE."
+  (ztree-find-file file hard))
+
+;; for ztree-node-side, ztree-node-face, ztree-node-left-short-name
+;; and ztree-node-right-short-name use default implementations
+
+;;
+;; Entry point
+;;
 
 ;;;###autoload
 (defun ztree-dir (path)
@@ -207,15 +243,9 @@ Otherwise open DIRED with the parent directory"
   (when (and (file-exists-p path) (file-directory-p path))
     (let ((buf-name (concat "*Directory " path " tree*")))
       (ztree-view buf-name
+                  #'ztree-insert-buffer-header                  
                   (expand-file-name (substitute-in-file-name path))
-                  #'ztree-file-not-hidden
-                  #'ztree-insert-buffer-header
-                  #'ztree-file-short-name
-                  #'file-directory-p
-                  #'string-equal
-                  #'ztree-dir-directory-files
-                  nil                   ; face
-                  #'ztree-find-file)    ; action
+                  nil)
       (ztreedir-mode))))
 
 

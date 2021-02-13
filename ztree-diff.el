@@ -563,6 +563,52 @@ unless it is a parent node."
       (setq ztree-diff-wait-message (concat ztree-diff-wait-message "."))))
   (message ztree-diff-wait-message))
 
+;;
+;; Implementation of the ztree-protocol
+;;
+
+(cl-defmethod ztree-node-visible-p ((node ztree-diff-node))
+  "Return T if the NODE shall be visible."
+  (ztree-node-is-visible node))
+
+(cl-defmethod ztree-node-short-name ((node ztree-diff-node))
+  "Return the short name for a node."
+  (ztree-diff-node-short-name-wrapper node nil))
+
+(cl-defmethod ztree-node-short-name ((node ztree-diff-node))
+  "Return the short name for a node."
+  (ztree-diff-node-short-name-wrapper node t))
+
+
+(cl-defmethod ztree-node-expandable-p ((node ztree-diff-node))
+  "Return T if the node is expandable."
+  (ztree-diff-node-is-directory node))
+
+(cl-defmethod ztree-node-equal ((node1 ztree-diff-node) (node2 ztree-diff-node))
+  "Equality function for NODE1 and NODE2.
+Return T if nodes are equal"
+  (ztree-diff-node-equal node1 node2))
+
+(cl-defmethod ztree-node-children ((node ztree-diff-node))
+  "Return a list of NODE children"
+  (ztree-diff-node-children node))
+
+(cl-defmethod ztree-node-action ((node ztree-diff-node) hard)
+  "Perform an action when the Return is pressed on a NODE."
+  (ztree-diff-node-action node hard))
+
+(cl-defmethod ztree-node-side ((node ztree-diff-node))
+  "Determine the side of the NODE."
+  (ztree-diff-node-side node))
+
+(cl-defmethod ztree-node-face ((node ztree-diff-node))
+  "Return a face to write a NODE in"
+  (ztree-diff-node-face node))
+  
+;;
+;; Entry point
+;;
+
 ;;;###autoload
 (defun ztree-diff (dir1 dir2)
   "Create an interactive buffer with the directory tree of the path given.
@@ -589,16 +635,9 @@ Argument DIR2 right directory."
     ;; after this command we are in a new buffer,
     ;; so all buffer-local vars are valid
     (ztree-view buf-name
+                #'ztree-diff-insert-buffer-header
                 model
-                'ztree-node-is-visible
-                'ztree-diff-insert-buffer-header
-                'ztree-diff-node-short-name-wrapper
-                'ztree-diff-node-is-directory
-                'ztree-diff-node-equal
-                'ztree-diff-node-children
-                'ztree-diff-node-face
-                'ztree-diff-node-action
-                'ztree-diff-node-side)
+                t)
     (ztreediff-mode)
     (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
     (ztree-diff-model-set-progress-fun #'ztree-diff-update-wait-message)
@@ -608,10 +647,6 @@ Argument DIR2 right directory."
     (message "Done.")
 
     (ztree-refresh-buffer)))
-
-
-
-
 
 
 (provide 'ztree-diff)
