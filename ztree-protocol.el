@@ -33,6 +33,7 @@
 
 (eval-when-compile (require 'cl-lib))
 
+;;; Node protocol
 
 ;;; Obligatory to implement
 

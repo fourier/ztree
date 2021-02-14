@@ -99,9 +99,6 @@ By default paths starting with dot (like .git) are ignored")
 (defvar-local ztree-diff-show-left-orphan-files t
   "Show or not orphan files/directories on left side.")
 
-(defvar-local ztree-diff-wait-message nil
-  "Message showing while constructing the diff tree.")
-
 (defvar ztree-diff-ediff-previous-window-configurations nil
   "Window configurations prior to calling `ediff'.
 A queue of window configurations, allowing
@@ -197,10 +194,7 @@ to restore last configuration even if there were a couple of ediff sessions")
     (if (not parent)
         (when ztree-diff-dirs-pair
           (ztree-diff (car ztree-diff-dirs-pair) (cdr ztree-diff-dirs-pair)))
-      (ztree-diff-update-wait-message
-           (concat "Updating " (ztree-diff-node-short-name common) " ..."))
       (ztree-diff-model-partial-rescan common)
-      (message "Done")
       (ztree-refresh-buffer (line-number-at-pos)))))
 
 
@@ -352,11 +346,8 @@ COPY-TO-RIGHT specifies which side of the NODE to update."
         (if copy-to-right
             (setf (ztree-diff-node-right-path node) target-full-path)
           (setf (ztree-diff-node-left-path node) target-full-path))
-        (ztree-diff-update-wait-message
-         (concat "Updating " (ztree-diff-node-short-name node) " ..."))
         ;; TODO: do not rescan the node. Use some logic like in delete
         (ztree-diff-model-update-node node)
-        (message "Done.")
         (ztree-diff-node-update-all-parents-diff node)
         (ztree-refresh-buffer (line-number-at-pos))))))
 
@@ -555,14 +546,6 @@ unless it is a parent node."
     (message (concat (if show "Show" "Hide") " orphan files"))
     (ztree-refresh-buffer)))
 
-(defun ztree-diff-update-wait-message (&optional msg)
-  "Update the wait message MSG with one more `.' progress indication."
-  (if msg
-      (setq ztree-diff-wait-message msg)
-    (when ztree-diff-wait-message
-      (setq ztree-diff-wait-message (concat ztree-diff-wait-message "."))))
-  (message ztree-diff-wait-message))
-
 ;;
 ;; Implementation of the ztree-protocol
 ;;
@@ -632,21 +615,16 @@ Argument DIR2 right directory."
                            " <--> "
                            (ztree-diff-node-right-short-name model)
                            "*")))
+    (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
+    (setq ztree-diff-dirs-pair (cons dir1 dir2))
+    (ztree-diff-node-recreate-with-progress model)
     ;; after this command we are in a new buffer,
     ;; so all buffer-local vars are valid
     (ztree-view buf-name
                 #'ztree-diff-insert-buffer-header
                 model
                 t)
-    (ztreediff-mode)
-    (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
-    (ztree-diff-model-set-progress-fun #'ztree-diff-update-wait-message)
-    (setq ztree-diff-dirs-pair (cons dir1 dir2))
-    (ztree-diff-update-wait-message (concat "Comparing " dir1 " and " dir2 " ..."))
-    (ztree-diff-node-recreate model)
-    (message "Done.")
-
-    (ztree-refresh-buffer)))
+    (ztreediff-mode)))
 
 
 (provide 'ztree-diff)

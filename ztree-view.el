@@ -89,6 +89,9 @@ or both sides
   "The cons pair of the previous line and column. Used
 to restore cursor position after refresh")
 
+(defvar-local ztree-last-window-width nil
+  "The window width at the last refresh")
+
 (defvar-local ztree-two-sided-p nil
   "If the tree is 2 sided, 2 trees shall be drawn side by side")
 
@@ -691,7 +694,8 @@ Optional argument LINE scroll to the line given."
                ;; restore cursor position if possible
                (ztree-scroll-to-line (car ztree-prev-position))
                (beginning-of-line)
-               (goto-char (+ (cdr ztree-prev-position) (point)))))))))
+               (goto-char (+ (cdr ztree-prev-position) (point)))))))
+    (setq ztree-last-window-width (window-width))))
 
              
 
@@ -730,7 +734,9 @@ change the root node to the node specified."
   (walk-windows (lambda (win) 
                   (with-current-buffer (window-buffer win)
                     (when (derived-mode-p 'ztree-mode)
-                      (ztree-refresh-buffer))))
+                      (when (and ztree-last-window-width
+                                 (/= ztree-last-window-width (window-width)))
+                        (ztree-refresh-buffer)))))
                 nil 'visible))
 
 (defun ztree-view (buffer-name header-fun start-node &optional two-sided-p)
@@ -747,8 +753,8 @@ Optional argument TWO-SIDED-P Determines if the tree is 2-sided (nil by default)
     (setq ztree-start-node start-node)
     (setq ztree-tree-header-fun header-fun)
     (setq ztree-two-sided-p two-sided-p)
-    (add-hook 'window-configuration-change-hook #'ztree-view-on-window-configuration-changed)
-    (ztree-refresh-buffer)))
+    (ztree-refresh-buffer)
+    (add-hook 'window-configuration-change-hook #'ztree-view-on-window-configuration-changed)))
 
 
 (provide 'ztree-view)

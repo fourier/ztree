@@ -45,18 +45,9 @@ Should be a list of strings.
 Example:
 (setq ztree-diff-options '(\"-w\" \"-i\"))")
 
-
 (defvar-local ztree-diff-model-ignore-fun nil
   "Function which determines if the node should be excluded from comparison.")
 
-(defvar-local ztree-diff-model-progress-fun nil
-  "Function which should be called whenever the progress indications is updated.")
-
-
-(defun ztree-diff-model-update-progress ()
-  "Update the progress."
-  (when ztree-diff-model-progress-fun
-    (funcall ztree-diff-model-progress-fun)))
 
 ;; Create a record ztree-diff-node with defined fields and getters/setters
 ;; here:
@@ -188,7 +179,7 @@ The node is a either a file or directory with both
 left and right parts existing."
   ;; if a directory - recreate
   (if (ztree-diff-node-is-directory node)
-      (ztree-diff-node-recreate node)
+      (ztree-diff-node-recreate-with-progress node)
     ;; if a file, change a status
     (setf (ztree-diff-node-different node)
           (if (or (ztree-diff-model-ignore-p node) ; if should be ignored
@@ -295,9 +286,16 @@ if parent has ignored status - ignore"
          (or (eql (ztree-diff-node-different parent) 'ignore)
              (ztree-diff-model-ignore-p node)))))
 
+(defun ztree-diff-node-recreate-with-progress (node)
+  "Initiate update of the NODE with a progress printout"
+  (let ((progress-reporter
+         (make-progress-reporter (concat "Comparing " (ztree-diff-node-left-path node) " and " (ztree-diff-node-right-path node) " ..."))))
+    (ztree-diff-node-recreate node progress-reporter)
+    (progress-reporter-done progress-reporter)))
 
-(defun ztree-diff-node-recreate (node)
-  "Traverse 2 paths defined in the NODE updating its children and status."
+(defun ztree-diff-node-recreate (node &optional reporter)
+  "Traverse 2 paths defined in the NODE updating its children and status.
+When REPORTER provided update the progress."
   (let* ((list1 (ztree-directory-files (ztree-diff-node-left-path node))) ;; left list of liles
          (list2 (ztree-directory-files (ztree-diff-node-right-path node))) ;; right list of files
          (should-ignore (ztree-diff-model-should-ignore node))
@@ -305,7 +303,9 @@ if parent has ignored status - ignore"
          (children-status (if should-ignore 'ignore 'new))
          (children nil))    ;; list of children
     ;; update waiting status
-    (ztree-diff-model-update-progress)
+    (when reporter
+      (sit-for 1)
+      (progress-reporter-update reporter))
     ;; update node status ignore status either inhereted from the
     ;; parent or the own
     (when should-ignore
@@ -383,7 +383,7 @@ if parent has ignored status - ignore"
 
 (defun ztree-diff-model-update-node (node)
   "Refresh the NODE."
-  (ztree-diff-node-recreate node))
+  (ztree-diff-node-recreate-with-progress node))
 
 
 
@@ -394,12 +394,6 @@ which returns t if the node should be ignored (like files starting
 with dot etc)."
   (setf ztree-diff-model-ignore-fun ignore-p))
 
-
-(defun ztree-diff-model-set-progress-fun (progress-fun)
-  "Setter for the buffer-local PROGRESS-FUN callback.
-This callback is called to indicate the ongoing activity.
-Callback is a function without arguments."
-  (setf ztree-diff-model-progress-fun progress-fun))
 
 (provide 'ztree-diff-model)
 
