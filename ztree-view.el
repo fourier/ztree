@@ -751,6 +751,7 @@ Optional argument TWO-SIDED-P Determines if the tree is 2-sided (nil by default)
     (ztree-mode)
     ;; configure ztree-view
     (setq ztree-start-node start-node)
+    (setq ztree-expanded-nodes-list (list ztree-start-node))
     (setq ztree-tree-header-fun header-fun)
     (setq ztree-two-sided-p two-sided-p)
     (ztree-refresh-buffer)
