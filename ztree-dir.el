@@ -245,8 +245,8 @@ Return T if nodes are equal"
       (ztree-view buf-name
                   #'ztree-insert-buffer-header                  
                   (expand-file-name (substitute-in-file-name path))
-                  nil)
-      (ztreedir-mode))))
+                  #'ztreedir-mode
+                  nil))))
 
 
 

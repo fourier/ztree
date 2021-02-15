@@ -304,7 +304,6 @@ When REPORTER provided update the progress."
          (children nil))    ;; list of children
     ;; update waiting status
     (when reporter
-      (sit-for 1)
       (progress-reporter-update reporter))
     ;; update node status ignore status either inhereted from the
     ;; parent or the own

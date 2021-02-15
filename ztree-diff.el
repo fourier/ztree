@@ -615,16 +615,18 @@ Argument DIR2 right directory."
                            " <--> "
                            (ztree-diff-node-right-short-name model)
                            "*")))
-    (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
-    (setq ztree-diff-dirs-pair (cons dir1 dir2))
-    (ztree-diff-node-recreate-with-progress model)
     ;; after this command we are in a new buffer,
     ;; so all buffer-local vars are valid
     (ztree-view buf-name
                 #'ztree-diff-insert-buffer-header
                 model
-                t)
-    (ztreediff-mode)))
+                (lambda ()
+                  (ztree-diff-model-set-ignore-fun #'ztree-diff-node-ignore-p)
+                  (setq ztree-diff-dirs-pair (cons dir1 dir2))
+                  (ztree-diff-node-recreate-with-progress model)
+                  (ztreediff-mode))
+                t)))
+
 
 
 (provide 'ztree-diff)

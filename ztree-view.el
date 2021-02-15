@@ -739,12 +739,16 @@ change the root node to the node specified."
                         (ztree-refresh-buffer)))))
                 nil 'visible))
 
-(defun ztree-view (buffer-name header-fun start-node &optional two-sided-p)
+(defun ztree-view (buffer-name header-fun start-node init-function &optional two-sided-p)
   "Create a ztree view buffer configured with parameters given.
 Argument BUFFER-NAME Name of the buffer created.
 Argument HEADER-FUN Function which inserts the header into the buffer
 before drawing the tree.
 Argument START-NODE Starting node - the root of the tree.
+Argument INIT-FUNCTION Function to call just before refreshing the buffer and
+setting all variables and mode. Could be nil.
+It could be used to set up a minor mode or build a tree. Function should not
+expect any arguments. Example: #'ztreedir-mode
 Optional argument TWO-SIDED-P Determines if the tree is 2-sided (nil by default)"
   (let ((buf (get-buffer-create buffer-name)))
     (switch-to-buffer buf)
@@ -754,6 +758,8 @@ Optional argument TWO-SIDED-P Determines if the tree is 2-sided (nil by default)
     (setq ztree-expanded-nodes-list (list ztree-start-node))
     (setq ztree-tree-header-fun header-fun)
     (setq ztree-two-sided-p two-sided-p)
+    (when init-function
+      (funcall init-function))
     (ztree-refresh-buffer)
     (add-hook 'window-configuration-change-hook #'ztree-view-on-window-configuration-changed)))
 
