@@ -4,7 +4,7 @@
 ;;
 ;; Author: Alexey Veretennikov <alexey.veretennikov@gmail.com>
 ;; Created: 2013-11-11
-;; Version: 1.0.5
+;; Version: 1.0.6
 ;; Package-Requires: ((cl-lib "0"))
 ;; Keywords: files tools
 ;; URL: https://github.com/fourier/ztree
