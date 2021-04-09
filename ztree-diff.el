@@ -558,7 +558,7 @@ unless it is a parent node."
   "Return the short name for a node."
   (ztree-diff-node-short-name-wrapper node nil))
 
-(cl-defmethod ztree-node-short-name ((node ztree-diff-node))
+(cl-defmethod ztree-node-right-short-name ((node ztree-diff-node))
   "Return the short name for a node."
   (ztree-diff-node-short-name-wrapper node t))
 

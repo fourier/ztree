@@ -545,7 +545,7 @@ Argument PATH start node."
          ;; with the offset of the text and relevant side information
          (line-properties (gethash line ztree-line-tree-properties))
          (expandable (ztree-node-expandable-p node))
-         (short-name (ztree-node-short-name node))
+         (short-name (ztree-node-left-short-name node))
          (count-children-left 
           (when (and expandable ztree-show-number-of-children)
             (ignore-errors
