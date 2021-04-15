@@ -105,17 +105,21 @@ MUST inster newline at the end!")
 
 (defvar ztree-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "\r") 'ztree-perform-action)
-    (define-key map (kbd "SPC") 'ztree-perform-soft-action)
-    (define-key map [double-mouse-1] 'ztree-perform-action)
-    (define-key map (kbd "TAB") 'ztree-jump-side)
-    (define-key map (kbd "g") 'ztree-refresh-buffer)
-    (define-key map (kbd "x") 'ztree-toggle-expand-subtree)
-    (define-key map [remap next-line] 'ztree-next-line)
-    (define-key map [remap previous-line] 'ztree-previous-line)
+    (define-key map (kbd "\r") #'ztree-perform-action)
+    (define-key map (kbd "SPC") #'ztree-perform-soft-action)
+    (define-key map [double-mouse-1] #'ztree-perform-action)
+    (define-key map (kbd "TAB") #'ztree-jump-side)
+    (define-key map (kbd "g") #'ztree-refresh-buffer)
+    (define-key map (kbd "x") #'ztree-toggle-expand-subtree)
+    (define-key map [remap next-line] #'ztree-next-line)
+    (define-key map [remap previous-line] #'ztree-previous-line)
+    ;; FIXME: Testing `window-system' is problematic since we can have
+    ;; both tty and GUI frames at the same time.
     (if window-system
-        (define-key map (kbd "<backspace>") 'ztree-move-up-in-tree)
-      (define-key map "\177" 'ztree-move-up-in-tree))
+        ;; FIXME: Why?  `backspace' is supposed to be remapped to DEL
+        ;; (aka \177) by `function-key-map' so this should not be needed.
+        (define-key map (kbd "<backspace>") #'ztree-move-up-in-tree)
+      (define-key map "\177" #'ztree-move-up-in-tree))
     map)
   "Keymap for `ztree-mode'.")
 

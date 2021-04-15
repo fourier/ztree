@@ -40,7 +40,8 @@
   "Mark files as different if their size different")
 
 (defvar ztree-diff-additional-options nil
-  "Command-line options for the diff program used as a diff backend. These options are added to default '-q' option.
+  "Command-line options for the diff program used as a diff backend.
+These options are added to default '-q' option.
 Should be a list of strings.
 Example:
 (setq ztree-diff-options '(\"-w\" \"-i\"))")

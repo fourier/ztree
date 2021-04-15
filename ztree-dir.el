@@ -61,7 +61,8 @@ By default all filest starting with dot `.', including . and ..")
 ;;
 
 (defvar ztree-dir-move-focus nil
-  "Defines if move focus to opened window on hard-action command (RETURN) on a file.")
+  "If non-nil move focus to opened window on hard-action command.
+E.g. when pressing RET on a file.")
 
 (defvar-local ztree-dir-filter-list (list ztree-hidden-files-regexp)
   "List of regexp file names to filter out.
@@ -90,16 +91,12 @@ One could add own filters in the following way:
 
 (define-minor-mode ztreedir-mode
   "A minor mode for displaying the directory trees in text mode."
-  ;; initial value
-  nil
-  ;; modeline name
-  " Dir"
-  ;; The minor mode keymap
-  `(
-    (,(kbd "H") . ztree-dir-toggle-show-filtered-files)
-    (,(kbd ">") . ztree-dir-narrow-to-dir)
-    (,(kbd "<") . ztree-dir-widen-to-parent)
-    (,(kbd "d") . ztree-dir-open-dired-at-point)))
+  :lighter " Dir"
+  :keymap `(
+            (,(kbd "H") . ztree-dir-toggle-show-filtered-files)
+            (,(kbd ">") . ztree-dir-narrow-to-dir)
+            (,(kbd "<") . ztree-dir-widen-to-parent)
+            (,(kbd "d") . ztree-dir-open-dired-at-point)))
 
 
 

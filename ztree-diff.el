@@ -107,21 +107,17 @@ to restore last configuration even if there were a couple of ediff sessions")
 ;;;###autoload
 (define-minor-mode ztreediff-mode
   "A minor mode for displaying the difference of the directory trees in text mode."
-  ;; initial value
-  nil
-  ;; modeline name
-  " Diff"
-  ;; The minor mode keymap
-  `(
-    (,(kbd "C") . ztree-diff-copy)
-    (,(kbd "h") . ztree-diff-toggle-show-equal-files)
-    (,(kbd "H") . ztree-diff-toggle-show-filtered-files)
-    (,(kbd "D") . ztree-diff-delete-file)
-    (,(kbd "v") . ztree-diff-view-file)
-    (,(kbd "d") . ztree-diff-simple-diff-files)
-    (,(kbd "r") . ztree-diff-partial-rescan)
-    (,(kbd "R") . ztree-diff-full-rescan)
-    ([f5] . ztree-diff-full-rescan)))
+  :lighter " Diff"
+  :keymap `(
+            (,(kbd "C") . ztree-diff-copy)
+            (,(kbd "h") . ztree-diff-toggle-show-equal-files)
+            (,(kbd "H") . ztree-diff-toggle-show-filtered-files)
+            (,(kbd "D") . ztree-diff-delete-file)
+            (,(kbd "v") . ztree-diff-view-file)
+            (,(kbd "d") . ztree-diff-simple-diff-files)
+            (,(kbd "r") . ztree-diff-partial-rescan)
+            (,(kbd "R") . ztree-diff-full-rescan)
+            ([f5] . ztree-diff-full-rescan)))
 
 
 (defun ztree-diff-node-face (node)
