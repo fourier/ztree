@@ -6,6 +6,8 @@
 ;;
 ;; Created: 2013-11-11
 ;;
+;; Modifications: 2022 Quazgar <quazgar@posteo.de>
+;;
 ;; Keywords: files tools
 ;; URL: https://github.com/fourier/ztree
 ;; Compatibility: GNU Emacs 24.x
@@ -142,16 +144,20 @@ to restore last configuration even if there were a couple of ediff sessions")
   (ztree-insert-with-face "Legend:" ztreep-diff-header-small-face)
   (insert "\n")
   (ztree-insert-with-face " Normal file " ztreep-diff-model-normal-face)
-  (ztree-insert-with-face "- same on both sides" ztreep-diff-header-small-face)
+  (ztree-insert-with-face "- same on both sides          " ztreep-diff-header-small-face)
+  (ztree-insert-with-face " | TAB: switch | h: show/hide identical" ztreep-diff-header-small-face)
   (insert "\n")
   (ztree-insert-with-face " Orphan file " ztreep-diff-model-add-face)
   (ztree-insert-with-face "- does not exist on other side" ztreep-diff-header-small-face)
+  (ztree-insert-with-face " | SPC: diff   | H: show/hide hidden" ztreep-diff-header-small-face)
   (insert "\n")
   (ztree-insert-with-face " Mismatch file " ztreep-diff-model-diff-face)
-  (ztree-insert-with-face "- different from other side" ztreep-diff-header-small-face)
+  (ztree-insert-with-face "- different from other side " ztreep-diff-header-small-face)
+  (ztree-insert-with-face " | RET: ediff  | C: copy to other" ztreep-diff-header-small-face)
   (insert "\n ")
   (ztree-insert-with-face "Ignored file" ztreep-diff-model-ignored-face)
-  (ztree-insert-with-face " - ignored from comparison" ztreep-diff-header-small-face)
+  (ztree-insert-with-face " - ignored from comparison    " ztreep-diff-header-small-face)
+  (ztree-insert-with-face " | F5:  rescan | D: delete  | v: quick view" ztreep-diff-header-small-face)
   (insert "\n")
 
   (ztree-insert-with-face "==============" ztreep-diff-header-face)
